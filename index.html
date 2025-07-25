@@ -1,0 +1,2855 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIRAI Coin ダッシュボード</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Interフォントを適用 */
+        body {
+            font-family: "Inter", sans-serif;
+        }
+        /* スクロールバーのスタイルをカスタマイズ */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-100">
+    <header class="bg-white shadow-md p-4 flex justify-between items-center rounded-b-xl">
+        <h1 id="home-button" class="text-3xl font-bold text-blue-700" style="cursor: pointer;">MIRAI Coin</h1>
+        <div id="user-info" class="flex items-center space-x-4">
+            </div>
+    </header>
+
+    <main class="container mx-auto p-6 md:p-8">
+        <div class="flex justify-end mb-6">
+            <label for="sort-by" class="mr-2 text-gray-700 font-medium">ソート順:</label>
+            <select
+                id="sort-by"
+                class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+            >
+                <option value="investedCoins">総投資額 (多い順)</option>
+                <option value="favoriteCount">お気に入り数 (多い順)</option>
+                <option value="myFavorites">マイお気に入り</option>
+                <option value="investorCount">投資人数 (多い順)</option>
+                <option value="stage">ステージ (早い順)</option>
+            </select>
+        </div>
+
+        <h2 class="text-3xl font-bold text-gray-800 mb-6">すべてのプロジェクト</h2>
+        <div id="projects-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+        <p id="no-projects-message" class="text-gray-600 text-lg col-span-full text-center py-10 hidden">まだプロジェクトはありません。</p>
+
+        <div id="user-profile-section" class="hidden mt-10"></div>
+        <div id="user-search-section" class="hidden mt-10"></div>
+        <div id="challenge-board-section" class="hidden mt-10"></div>
+        <div id="knowledge-archive-section" class="hidden mt-10"></div>
+        <div id="notifications-section" class="hidden mt-10"></div>
+        <div id="weekly-highlight-section" class="hidden mt-10"></div>
+        <div id="admin-settings-section" class="hidden mt-10"></div>
+
+    </main>
+
+    <div id="notification-container">
+        </div>
+
+    <footer class="fixed bottom-0 left-0 w-full bg-white shadow-lg p-4 flex justify-around items-center border-t border-gray-200 z-40 md:hidden">
+        <button class="flex flex-col items-center text-gray-600 hover:text-blue-600 focus:outline-none nav-button" data-section="project-list">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0h10a2 2 0 002-2v-6a2 2 0 00-2-2H9m0 0V9a2 2 0 012-2h2a2 2 0 012 2v3m0 0h3m-3 0h3a2 2 0 002-2V9a2 2 0 00-2-2H9"></path></svg>
+            <span class="text-xs mt-1">プロジェクト</span>
+        </button>
+        <button class="flex flex-col items-center text-gray-600 hover:text-blue-600 focus:outline-none nav-button" data-section="user-search">
+             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <span class="text-xs mt-1">ユーザー検索</span>
+        </button>
+        <button class="flex flex-col items-center text-gray-600 hover:text-blue-600 focus:outline-none nav-button" data-section="challenge-board">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+            <span class="text-xs mt-1">課題</span>
+        </button>
+        <div class="relative">
+            <button class="flex flex-col items-center text-gray-600 hover:text-blue-600 focus:outline-none nav-button" data-section="notifications">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                <span class="text-xs mt-1">通知</span>
+                <span id="unread-notifications-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center hidden"></span>
+            </button>
+        </div>
+        <button class="flex flex-col items-center text-gray-600 hover:text-blue-600 focus:outline-none nav-button" data-section="user-profile">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+            <span class="text-xs mt-1">マイページ</span>
+        </button>
+    </footer>
+
+    <script>
+        // Utility Functions for Local Storage
+        const getFromLocalStorage = (key, defaultValue) => {
+            try {
+                const item = localStorage.getItem(key);
+                return item ? JSON.parse(item) : defaultValue;
+            } catch (error) {
+                console.error(`Error reading from localStorage key "${key}":`, error);
+                return defaultValue;
+            }
+        };
+
+        const saveToLocalStorage = (key, value) => {
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+            } catch (error) {
+                console.error(`Error writing to localStorage key "${key}":`, error);
+            }
+        };
+
+        // Global State Variables (mimicking React's state)
+        let currentUser = null;
+        let allUsers = [];
+        let projects = [];
+        let notifications = []; // 新しい通知データ
+        let notificationTimeoutId = null; // To manage notification display time
+
+        // Stage Order for sorting
+        const stageOrder = [
+            'WILL (ビジョン策定/アイデア発掘)',
+            'ENTRY (アイデア創出)',
+            'MVP1 (顧客課題特定)',
+            'MVP2 (解決策検証)',
+            'SEED (事業を成立させ成長原動力)',
+            'ALPHA (事業試験/拡大)',
+            'BETA (黒字化)',
+            'EXIT (事業化/会社化)',
+        ];
+
+        // Dummy Project Generation (from original React code)
+        const generateDummyProjects = (count, users) => {
+            const dummyProjects = [];
+            const skillsList = ['JavaScript', 'React', 'Python', 'AI', 'UI/UX', 'データ分析', 'マーケティング', 'ハードウェア開発', 'デザイン思考', '機械学習', 'クラウド', 'IoT', 'ブロックチェーン', 'VR/AR'];
+            const projectTitles = [
+                "次世代モビリティAI開発", "スマートシティ交通最適化プロジェクト", "自動運転システムのための高精度マッピング",
+                "EVバッテリー長寿命化技術", "パーソナルモビリティデザイン革新", "環境負荷ゼロの生産プロセス構築",
+                "サプライチェーンDX推進", "顧客体験を向上させるコネクテッドサービス", "未来型工場におけるロボティクス導入",
+                "水素エネルギー活用インフラ構築", "AIを活用した品質管理システム", "シェアリングエコノミー向け車両開発",
+                "都市型ドローン配送システム", "生体認証による車両セキュリティ", "ARナビゲーションシステム開発",
+                "リサイクル素材を活用した新素材開発", "高齢者向け自動運転シャトル", "災害時緊急車両支援システム",
+                "モビリティデータ分析プラットフォーム", "VRによる車両デザインシミュレーション"
+            ];
+
+            const stages = [
+                { name: 'WILL (ビジョン策定/アイデア発掘)', image: 'https://placehold.co/150x50/007bff/ffffff?text=Stage+0' },
+                { name: 'ENTRY (アイデア創出)', image: 'https://placehold.co/150x50/28a745/ffffff?text=Stage+1' },
+                { name: 'MVP1 (顧客課題特定)', image: 'https://placehold.co/150x50/ffc107/000000?text=Stage+2' },
+                { name: 'MVP2 (解決策検証)', image: 'https://placehold.co/150x50/fd7e14/ffffff?text=Stage+3' },
+                { name: 'SEED (事業を成立させ成長原動力)', image: 'https://placehold.co/150x50/6f42c1/ffffff?text=Stage+4' },
+                { name: 'ALPHA (事業試験/拡大)', image: 'https://placehold.co/150x50/dc3545/ffffff?text=Stage+5' },
+                { name: 'BETA (黒字化)', image: 'https://placehold.co/150x50/20c997/ffffff?text=Stage+6' },
+                { name: 'EXIT (事業化/会社化)', image: 'https://placehold.co/150x50/6c757d/ffffff?text=Stage+7' },
+            ];
+
+            const detailedDescriptions = [
+                "このプロジェクトは、最新のAI技術を駆使して、都市における交通渋滞を根本から解決することを目指しています。リアルタイムの交通データを分析し、最適なルートを提案するだけでなく、信号機の制御や公共交通機関の運行調整までを自動化することで、移動時間の短縮と環境負荷の低減に貢献します。特に、緊急車両の優先通行を確保するAIアルゴリズムは、災害時の迅速な対応を可能にします。",
+                "次世代の自動運転システムのために、高精度な3Dマッピング技術を開発します。LiDAR、カメラ、レーダーなどのセンサーデータを統合し、センチメートル単位の精度で道路状況や周囲の環境をデジタルツインとして再現。これにより、悪天候下や視界不良の状況でも、車両が安全かつ正確に走行できる基盤を提供します。将来的には、このマッピングデータを都市計画やインフラ管理にも応用することを目指します。",
+                "電気自動車の普及を加速させるため、革新的なバッテリー長寿命化技術の研究開発を行います。AIによる充電最適化、新素材を用いた電極開発、そしてバッテリーの状態をリアルタイムで監視・予測するシステムを統合。これにより、バッテリーの劣化を最小限に抑え、充電サイクル寿命を大幅に延長することで、EVの維持コストを削減し、ユーザーの不安を解消します。",
+                "環境負荷を最小限に抑えることを目的とした、製造プロセスの完全な再構築を目指します。AIを活用したエネルギー最適化、廃棄物のゼロエミッション化、そしてリサイクル素材の積極的な導入により、持続可能な生産体制を確立します。このプロジェクトは、製造業における環境規制への対応だけでなく、新たなビジネスモデルの創出にも繋がる可能性を秘めています。",
+                "顧客の購買行動や嗜好を深く理解し、パーソナライズされた体験を提供するコネクテッドサービスを開発します。車両データ、ユーザーのスマートフォンデータ、外部サービスとの連携を通じて、移動中のエンターテイメント、情報提供、そして緊急時のサポートまでを一貫して提供。これにより、車両が単なる移動手段ではなく、生活の一部となるような、より豊かなモビリティ体験を創造します。",
+                "未来の工場における生産効率と柔軟性を最大化するため、最先端のロボティクス技術を導入します。協働ロボットとAIを組み合わせることで、複雑な組み立て作業や品質検査を自動化し、人手不足の解消と生産性の向上を実現します。また、ロボットが自律的に学習し、変化する生産ラインに柔軟に対応できるシステムを構築することで、少量多品種生産にも対応可能なスマートファクトリーを実現します。",
+                "水素エネルギーの普及に向けた、包括的なインフラ構築プロジェクトです。水素製造、貯蔵、輸送、そして供給までの一連のプロセスを最適化する技術を開発し、効率的で安全な水素サプライチェーンを確立します。特に、再生可能エネルギー由来の水素製造技術に注力し、クリーンなエネルギー社会への移行を加速させます。",
+                "サプライチェーン全体の透明性と効率性を高めるためのDX（デジタルトランスフォーメーション）を推進します。ブロックチェーン技術を活用して、製品の生産履歴から流通、消費までの全過程を追跡可能にし、偽造品の排除や品質保証を強化します。また、AIによる需要予測と在庫最適化により、無駄を削減し、サプライチェーンのレジリエンスを向上させます。",
+                "都市部における新たな物流ソリューションとして、ドローンによる配送システムを開発します。小型・軽量な荷物を迅速かつ低コストで配送することを可能にし、特に緊急物資の輸送や過疎地域への配送において、その真価を発揮します。航空管制システムとの連携や安全性の確保に重点を置き、社会インフラとしてのドローン配送の実現を目指します。",
+                "仮想現実（VR）技術を活用し、車両のデザインプロセスを革新します。デザイナーがVR空間で車両の内外装を自由に操作し、リアルタイムで形状、色、素材の変更をシミュレーションできるシステムを構築。これにより、物理的なプロトタイプ作成の時間とコストを大幅に削減し、より創造的で効率的なデザイン開発を可能にします。ユーザーテストにもVRを導入し、開発初期段階でのフィードバックを最大化します。"
+            ];
+
+
+            for (let i = 0; i < count; i++) {
+                const numSkills = Math.floor(Math.random() * 3) + 2; // 2 to 4 skills for more detail
+                const requiredSkills = Array.from({ length: numSkills }, () => skillsList[Math.floor(Math.random() * skillsList.length)]);
+                const randomStage = stages[Math.floor(Math.random() * stages.length)];
+                const randomTitle = projectTitles[i % projectTitles.length]; // Use unique titles for the first 10
+
+                const fullDescription = detailedDescriptions[i % detailedDescriptions.length]; // Use detailed descriptions
+                const shortDescription = fullDescription.substring(0, 100) + "..."; // Take first 100 chars for short desc
+
+                const simulatedInvestors = [];
+                let totalInvested = 0;
+                // ★★ 修正点: 投資家を5〜20人の範囲でランダムに生成 ★★
+                const numSimulatedInvestors = Math.floor(Math.random() * 16) + 5;
+                // 提案者以外のユーザーリストを作成
+                const potentialInvestors = users.filter(u => u.id !== 'default-user');
+
+                for (let j = 0; j < numSimulatedInvestors; j++) {
+                    if (potentialInvestors.length === 0) break;
+
+                    const randomInvestor = potentialInvestors[Math.floor(Math.random() * potentialInvestors.length)];
+                    const amount = Math.floor(Math.random() * 2000) + 100; // Random investment amount, higher range
+
+                    // 同じ投資家が複数回投資するケースも考慮するが、今回はシンプルにユニークな投資家を追加
+                    if (!simulatedInvestors.some(inv => inv.userId === randomInvestor.id)) {
+                        simulatedInvestors.push({
+                            userId: randomInvestor.id,
+                            name: randomInvestor.username,
+                            amount: amount,
+                            department: randomInvestor.department,
+                            position: randomInvestor.position,
+                            timestamp: Date.now() - Math.floor(Math.random() * 60 * 24 * 60 * 60 * 1000) // Within last 60 days
+                        });
+                        totalInvested += amount;
+                    }
+                }
+
+                dummyProjects.push({
+                    id: `project-${i + 1}`, // Start IDs from 1
+                    title: randomTitle,
+                    description: shortDescription,
+                    fullDescription: fullDescription,
+                    proposerId: 'default-user',
+                    investedCoins: totalInvested,
+                    investors: simulatedInvestors,
+                    status: 'Proposed',
+                    stage: randomStage.name,
+                    stageImage: randomStage.image,
+                    requiredSkills: [...new Set(requiredSkills)],
+                    members: ['default-user'],
+                    projectImage: `https://placehold.co/400x200/${Math.floor(Math.random()*16777215).toString(16)}/ffffff?text=Project+${i + 1}`,
+                    favoriteCount: Math.floor(Math.random() * 50) + 10, // Simulate favorite count with higher base
+                    comments: [], // New: For project comments
+                    timeline: [{ timestamp: Date.now() - 86400000 * 30, stage: 'WILL (ビジョン策定/アイデア発掘)', description: 'プロジェクト発足' }], // New: For project timeline
+                    knowledgePosts: [] // New: For knowledge posts
+                });
+            }
+            return dummyProjects;
+        };
+
+        // Notification Component Logic
+        const showNotification = (message, type) => {
+            const notificationContainer = document.getElementById('notification-container');
+            if (!notificationContainer) return;
+
+            // Clear any existing notification timeout
+            if (notificationTimeoutId) {
+                clearTimeout(notificationTimeoutId);
+            }
+
+            // Remove existing notification if any
+            let existingNotification = notificationContainer.querySelector('.notification-item');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+
+            const bgColor = type === 'success' ? 'bg-green-100 border-green-400 text-green-700' : type === 'info' ? 'bg-blue-100 border-blue-400 text-blue-700' : 'bg-red-100 border-red-400 text-red-700';
+            const titleText = type === 'success' ? '成功！' : type === 'info' ? '情報' : 'エラー！';
+
+
+            const notificationDiv = document.createElement('div');
+            notificationDiv.className = `notification-item fixed top-4 right-4 px-4 py-3 rounded-lg shadow-md border ${bgColor} z-50`;
+            notificationDiv.setAttribute('role', 'alert');
+            notificationDiv.innerHTML = `
+                <strong class="font-bold">${titleText}</strong>
+                <span class="block sm:inline ml-2">${message}</span>
+                <span class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer close-notification">
+                    <svg class="fill-current h-6 w-6 text-gray-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                        <title>閉じる</title>
+                        <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.103l-2.651 3.746a1.2 1.2 0 0 1-1.697-1.697l3.746-2.651-3.746-2.651a1.2 1.2 0 0 1 1.697-1.697L10 8.897l2.651-3.746a1.2 1.2 0 0 1 1.697 1.697L11.103 10l3.746 2.651a1.2 1.2 0 0 1 0 1.698z"/>
+                    </svg>
+                </span>
+            `;
+            notificationContainer.appendChild(notificationDiv);
+
+            // Add event listener to close button
+            notificationDiv.querySelector('.close-notification').addEventListener('click', () => {
+                notificationDiv.remove();
+                if (notificationTimeoutId) {
+                    clearTimeout(notificationTimeoutId);
+                    notificationTimeoutId = null;
+                }
+            });
+
+            // Auto-hide after 5 seconds
+            notificationTimeoutId = setTimeout(() => {
+                if (notificationDiv.parentNode) {
+                    notificationDiv.remove();
+                }
+                notificationTimeoutId = null;
+            }, 5000);
+        };
+
+        // Auth Logic (simulating AuthContext)
+        const initializeAuth = () => {
+            const firstNames = ['太郎', '花子', '健太', '美咲', '大輔', '優子', '拓也', '彩', '翔太', '陽菜', '悟', '葵'];
+            const lastNames = ['佐藤', '鈴木', '高橋', '田中', '渡辺', '伊藤', '中村', '小林', '加藤', '吉田', '山田', '佐々木'];
+            const departments = ['生産管理部', '技術開発部', '営業部', '経理部', '人事部', 'デザイン部', '広報部', '法務部'];
+            const positions = ['一般社員', '主任', '係長', '課長', '部長', '本部長', '役員'];
+
+            const randomFirstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+            const randomLastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+            const randomFullName = `${randomLastName} ${randomFirstName}`;
+            const randomDepartment = departments[Math.floor(Math.random() * departments.length)];
+            const randomPosition = positions[Math.floor(Math.random() * positions.length)];
+
+            const defaultUser = {
+                id: 'default-user',
+                username: randomFullName,
+                department: randomDepartment, // Added department
+                position: randomPosition,     // Added position
+                miraiCoins: 10000,
+                investedProjects: [],
+                skills: ['JavaScript', 'React', 'Python', 'AI', 'UI/UX', 'データ分析', 'マーケティング', 'ハードウェア開発', 'デザイン思考'],
+                favorites: [],
+                followers: [], // New: フォロワー
+                following: [], // New: フォロー中
+                recommendations: [], // New: 推薦されたユーザー
+                scoutOffers: [], // New: スカウトオファー
+                personalMission: '未来のモビリティ社会の実現に貢献する', // New: 個人のミッション
+                interestThemes: ['AI', 'EV', '自動運転', 'GX', '新素材'], // New: 関心テーマ
+                contributionScore: 0, // New: 貢献スコア
+                achievements: [], // New: 称号
+                rank: 'ブロンズ', // New: ランキング（擬似）
+                internalEvaluation: '定期評価は「期待を上回る貢献」', // New: 社内評価
+                notificationSettings: { slack: true, teams: false, email: true }, // New: 通知設定
+                profileImage: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70) + 1}` // ダミーのアバター画像
+            };
+
+            currentUser = getFromLocalStorage('miraiCoinCurrentUser', defaultUser);
+            allUsers = getFromLocalStorage('miraiCoinUsers', []);
+
+            // ユーザーが存在しない場合、追加
+            if (!allUsers.some(u => u.id === defaultUser.id)) {
+                allUsers.push(defaultUser);
+            }
+            // initializeAuth時にダミーユーザーが重複生成されないように、存在しない場合のみ生成する
+             // ★★ 修正点: ダミーユーザーを20人に増やす ★★
+            if (allUsers.filter(u => u.id.startsWith('user-')).length < 20) {
+                 const dummyUsers = generateDummyUsers(20); // 20人のダミーユーザーを生成
+                 allUsers = [defaultUser, ...dummyUsers]; // currentUserを先頭に、他をダミーで上書き
+            }
+
+            saveToLocalStorage('miraiCoinCurrentUser', currentUser);
+            saveToLocalStorage('miraiCoinUsers', allUsers);
+        };
+
+        const updateUserCoins = (userId, amount) => {
+            allUsers = allUsers.map(user =>
+                user.id === userId ? { ...user, miraiCoins: user.miraiCoins + amount } : user
+            );
+            if (currentUser && currentUser.id === userId) {
+                currentUser.miraiCoins += amount;
+            }
+            saveToLocalStorage('miraiCoinCurrentUser', currentUser);
+            saveToLocalStorage('miraiCoinUsers', allUsers);
+        };
+
+        const updateUserInvestments = (userId, projectId, amount) => {
+            allUsers = allUsers.map(user => {
+                if (user.id === userId) {
+                    const newInvestedProjects = [...user.investedProjects];
+                    const existingInvestmentIndex = newInvestedProjects.findIndex(inv => inv.projectId === projectId);
+
+                    if (existingInvestmentIndex !== -1) {
+                        newInvestedProjects[existingInvestmentIndex].amount += amount;
+                    } else {
+                        newInvestedProjects.push({ projectId, amount });
+                    }
+                    return { ...user, investedProjects: newInvestedProjects };
+                }
+                return user;
+            });
+            if (currentUser && currentUser.id === userId) {
+                const newInvestedProjects = [...currentUser.investedProjects];
+                const existingInvestmentIndex = newInvestedProjects.findIndex(inv => inv.projectId === projectId);
+                if (existingInvestmentIndex !== -1) {
+                    newInvestedProjects[existingInvestmentIndex].amount += amount;
+                } else {
+                    newInvestedProjects.push({ projectId, amount });
+                }
+                currentUser.investedProjects = newInvestedProjects;
+            }
+            saveToLocalStorage('miraiCoinCurrentUser', currentUser);
+            saveToLocalStorage('miraiCoinUsers', allUsers);
+        };
+
+        const getUserById = (id) => allUsers.find(u => u.id === id);
+
+        const addProjectMember = (projectId, userId) => {
+            projects = projects.map(project => {
+                if (project.id === projectId && !project.members.includes(userId)) {
+                    // プロジェクトメンバーになったら、ユーザーの貢献スコアを増やす
+                    const updatedUser = allUsers.find(u => u.id === userId);
+                    if (updatedUser) {
+                        updatedUser.contributionScore = (updatedUser.contributionScore || 0) + 50; // メンバー参加で50スコア
+                        saveToLocalStorage('miraiCoinUsers', allUsers);
+                        if (currentUser.id === userId) { // 現在のユーザーであればcurrentUserも更新
+                            currentUser.contributionScore = updatedUser.contributionScore;
+                            saveToLocalStorage('miraiCoinCurrentUser', currentUser);
+                        }
+                    }
+                    return { ...project, members: [...project.members, userId] };
+                }
+                return project;
+            });
+            saveToLocalStorage('miraiCoinProjects', projects);
+        };
+
+        const removeProjectMember = (projectId, userId) => {
+            projects = projects.map(project => {
+                if (project.id === projectId) {
+                    // プロジェクトメンバーから脱退したら、ユーザーの貢献スコアを減らす（任意）
+                    const updatedUser = allUsers.find(u => u.id === userId);
+                    if (updatedUser) {
+                        updatedUser.contributionScore = Math.max(0, (updatedUser.contributionScore || 0) - 20); // 脱退で20スコア減
+                        saveToLocalStorage('miraiCoinUsers', allUsers);
+                        if (currentUser.id === userId) {
+                            currentUser.contributionScore = updatedUser.contributionScore;
+                            saveToLocalStorage('miraiCoinCurrentUser', currentUser);
+                        }
+                    }
+                    return { ...project, members: project.members.filter(memberId => memberId !== userId) };
+                }
+                return project;
+            });
+            saveToLocalStorage('miraiCoinProjects', projects);
+        };
+
+        const toggleFavorite = (projectId) => {
+            if (currentUser) {
+                const newFavorites = currentUser.favorites.includes(projectId)
+                    ? currentUser.favorites.filter(id => id !== projectId)
+                    : [...currentUser.favorites, projectId];
+                currentUser.favorites = newFavorites;
+                saveToLocalStorage('miraiCoinCurrentUser', currentUser);
+                // Also update the user in the allUsers array
+                allUsers = allUsers.map(user =>
+                    user.id === currentUser.id ? { ...user, favorites: newFavorites } : user
+                );
+                saveToLocalStorage('miraiCoinUsers', allUsers);
+
+                // プロジェクトのお気に入り数を更新
+                projects = projects.map(project => {
+                    if (project.id === projectId) {
+                        return { ...project, favoriteCount: newFavorites.includes(projectId) ? project.favoriteCount + 1 : project.favoriteCount - 1 };
+                    }
+                    return project;
+                });
+                saveToLocalStorage('miraiCoinProjects', projects);
+            }
+        };
+
+        // Project Logic (simulating ProjectContext)
+        const initializeProjects = () => {
+            projects = getFromLocalStorage('miraiCoinProjects', []);
+            if (projects.length === 0 || projects.length !== 10) { // Re-generate if not 10 projects
+                 // ★★ 修正点: ダミープロジェクト生成時に全ユーザー情報を渡す ★★
+                projects = generateDummyProjects(10, allUsers);
+                saveToLocalStorage('miraiCoinProjects', projects);
+            }
+             // ★★ 修正点: この同期ロジックはgenerateDummyProjectsに統合されたため、不要に ★★
+        };
+
+
+        const investInProject = (projectId, userId, amount) => {
+            projects = projects.map(project => {
+                if (project.id === projectId) {
+                    const newInvestors = [...project.investors];
+                    const existingInvestmentIndex = newInvestors.findIndex(inv => inv.userId === userId);
+
+                    // 投資者のユーザー情報を取得
+                    const investorUser = getUserById(userId);
+                    const investorName = investorUser ? investorUser.username : '不明';
+                    const investorDepartment = investorUser ? investorUser.department : '不明';
+                    const investorPosition = investorUser ? investorUser.position : '不明';
+
+
+                    if (existingInvestmentIndex !== -1) {
+                        newInvestors[existingInvestmentIndex].amount += amount;
+                    } else {
+                        newInvestors.push({ userId, amount, name: investorName, department: investorDepartment, position: investorPosition });
+                    }
+                    // 貢献スコアの更新
+                    if (currentUser) {
+                        currentUser.contributionScore = (currentUser.contributionScore || 0) + (amount / 100); // 100MCにつき1スコア
+                        saveToLocalStorage('miraiCoinCurrentUser', currentUser);
+                        allUsers = allUsers.map(user => user.id === currentUser.id ? currentUser : user);
+                        saveToLocalStorage('miraiCoinUsers', allUsers);
+                    }
+
+                    return {
+                        ...project,
+                        investedCoins: project.investedCoins + amount,
+                        investors: newInvestors
+                    };
+                }
+                return project;
+            });
+            saveToLocalStorage('miraiCoinProjects', projects);
+        };
+
+        // 新しいユーザーデータ構造に合わせたダミーユーザー生成
+        const generateDummyUsers = (count) => {
+            const dummyUsers = [];
+            const firstNames = ['健太', '陽菜', '拓也', '葵', '悟', '彩', '翔太', '優子', '大輔', '美咲', '隆', '恵', '誠', '梓', '浩司', '遥', '剛', '梨花'];
+            const lastNames = ['佐藤', '鈴木', '高橋', '田中', '渡辺', '伊藤', '中村', '小林', '加藤', '吉田', '山田', '佐々木', '山口', '松本', '井上', '木村', '林', '斎藤'];
+            const departments = ['生産管理部', '技術開発部', '営業部', '経理部', '人事部', 'デザイン部', '広報部', '法務部', '研究開発本部', 'グローバル事業部'];
+            const positions = ['一般社員', '主任', '係長', '課長', '部長', '本部長', '役員'];
+            const skillsList = ['JavaScript', 'React', 'Python', 'AI', 'UI/UX', 'データ分析', 'マーケティング', 'ハードウェア開発', 'デザイン思考', '機械学習', 'クラウド', 'IoT', 'ブロックチェーン', 'VR/AR', 'プロジェクトマネジメント', 'ファイナンス'];
+            const personalMissions = [
+                '未来のモビリティ社会の実現に貢献する', '新たな価値創造を通じて社会を豊かにする',
+                '技術で人々の生活をより便利にする', '持続可能な社会の実現に貢献する',
+                'データに基づいた意思決定を促進する', 'ユーザー中心のプロダクト開発を推進する'
+            ];
+            const interestThemes = ['AI', 'EV', '自動運転', 'GX', '新素材', 'ロボティクス', 'エネルギー', '都市開発', 'DX', 'MaaS'];
+            const achievementsList = ['プロジェクトチャレンジャー', 'イノベーション推進者', 'データ活用エキスパート', 'デザイン思考実践者'];
+            const ranks = ['ブロンズ', 'シルバー', 'ゴールド', 'プラチナ'];
+
+            for (let i = 0; i < count; i++) {
+                const randomFirstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+                const randomLastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+                const randomFullName = `${randomLastName} ${randomFirstName}`;
+                const randomDepartment = departments[Math.floor(Math.random() * departments.length)];
+                const randomPosition = positions[Math.floor(Math.random() * positions.length)];
+                const userSkills = Array.from({length: Math.floor(Math.random() * 5) + 3}, () => skillsList[Math.floor(Math.random() * skillsList.length)]);
+                const userMission = personalMissions[Math.floor(Math.random() * personalMissions.length)];
+                const userThemes = Array.from({length: Math.floor(Math.random() * 4) + 2}, () => interestThemes[Math.floor(Math.random() * interestThemes.length)]);
+                const userAchievements = Array.from({length: Math.floor(Math.random() * 2)}, () => achievementsList[Math.floor(Math.random() * achievementsList.length)]);
+                const userRank = ranks[Math.floor(Math.random() * ranks.length)];
+
+                dummyUsers.push({
+                    id: `user-${i+1}`,
+                    username: randomFullName,
+                    department: randomDepartment,
+                    position: randomPosition,
+                    miraiCoins: Math.floor(Math.random() * 10000) + 1000,
+                    investedProjects: [], // 後で投資履歴を追加
+                    skills: [...new Set(userSkills)],
+                    favorites: [], // 後で設定
+                    followers: [],
+                    following: [],
+                    recommendations: [],
+                    scoutOffers: [],
+                    personalMission: userMission,
+                    interestThemes: [...new Set(userThemes)],
+                    contributionScore: Math.floor(Math.random() * 1000),
+                    achievements: [...new Set(userAchievements)],
+                    rank: userRank,
+                    internalEvaluation: `期末評価: ${['A', 'B', 'C'][Math.floor(Math.random() * 3)]}`,
+                    profileImage: `https://i.pravatar.cc/150?img=${i+1}` // ダミーのアバター画像
+                });
+            }
+            return dummyUsers;
+        };
+
+
+        // Render Header
+        const renderHeader = () => {
+            const userInfoDiv = document.getElementById('user-info');
+            if (currentUser) {
+                userInfoDiv.innerHTML = `
+                    <span class="text-lg font-medium text-gray-800 hidden md:inline">
+                        ようこそ、<span class="font-semibold text-blue-600">${currentUser.username}</span>さん！
+                    </span>
+                    <span class="text-lg font-bold text-green-600 hidden md:inline">
+                        残高: ${currentUser.miraiCoins.toFixed(2)} MC
+                    </span>
+                    <button id="view-user-search-button" class="ml-2 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out hidden md:inline-block">
+                        ユーザー検索
+                    </button>
+                    <button id="view-profile-button" class="ml-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out hidden md:inline-block">
+                        プロフィール
+                    </button>
+                    <button id="view-challenge-board-button" class="ml-2 bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out hidden md:inline-block">
+                        課題ボード
+                    </button>
+                    <button id="view-knowledge-archive-button" class="ml-2 bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out hidden md:inline-block">
+                        ナレッジ
+                    </button>
+                     <button id="view-weekly-highlight-button" class="ml-2 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out hidden md:inline-block">
+                        週次ハイライト
+                    </button>
+                     <div class="relative ml-4 hidden md:inline-block">
+                        <button id="notification-bell" class="relative p-2 rounded-full bg-gray-200 hover:bg-gray-300 focus:outline-none">
+                            <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                            <span id="header-unread-notifications-badge" class="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center hidden"></span>
+                        </button>
+                        <div id="notification-dropdown" class="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl py-2 z-50 hidden">
+                            <h4 class="px-4 py-2 text-lg font-bold text-gray-800 border-b">通知</h4>
+                            <div id="notification-list" class="max-h-60 overflow-y-auto">
+                                </div>
+                            <button id="mark-all-read-button" class="w-full text-center py-2 text-blue-600 hover:bg-gray-100 text-sm border-t">すべて既読にする</button>
+                            <button id="view-all-notifications-button" class="w-full text-center py-2 text-gray-600 hover:bg-gray-100 text-sm border-t">通知一覧を見る</button>
+                        </div>
+                    </div>
+                `;
+                updateNotificationBadge(); // ヘッダーの通知バッジを更新
+            } else {
+                userInfoDiv.innerHTML = '';
+            }
+        };
+
+        // Create Project Card Element
+        const createProjectCardElement = (project) => {
+            const projectCardDiv = document.createElement('div');
+            projectCardDiv.className = "bg-white rounded-xl shadow-lg p-6 mb-6 border border-gray-200 transform transition-all duration-300 hover:scale-[1.01] hover:shadow-xl";
+            projectCardDiv.dataset.projectId = project.id; // Store project ID for event delegation
+
+            const userHasRequiredSkills = currentUser && project.requiredSkills.every(skill => currentUser.skills.includes(skill));
+            const isUserAMember = currentUser && project.members.includes(currentUser.id);
+            const isFavorited = currentUser && currentUser.favorites.includes(project.id);
+
+            const proposer = getUserById(project.proposerId);
+
+            // Calculate investment distribution for charts
+            const investmentByDepartment = (() => {
+                const departments = {};
+                project.investors.forEach(investor => {
+                    // ★★ 修正点: investorオブジェクトに部署情報が直接含まれるように ★★
+                    const department = investor.department || '部署不明';
+                    departments[department] = (departments[department] || 0) + investor.amount;
+                });
+                return Object.entries(departments).map(([department, amount]) => ({ department, amount }));
+            })();
+
+            const investmentByPosition = (() => {
+                const positions = {};
+                project.investors.forEach(investor => {
+                     // ★★ 修正点: investorオブジェクトに役職情報が直接含まれるように ★★
+                    const position = investor.position || '役職不明';
+                    positions[position] = (positions[position] || 0) + investor.amount;
+                });
+                return Object.entries(positions).map(([position, amount]) => ({ position, amount }));
+            })();
+
+            const top3Investors = [...project.investors].sort((a, b) => b.amount - a.amount).slice(0, 3).map(inv => {
+                const user = getUserById(inv.userId);
+                return { name: user ? user.username : inv.name || '不明', amount: inv.amount };
+            });
+
+            projectCardDiv.innerHTML = `
+                <div class="relative">
+                    <img src="${project.projectImage}" alt="${project.title}" class="w-full h-48 object-cover rounded-lg mb-4" onerror="this.onerror=null;this.src='https://placehold.co/400x200/cccccc/333333?text=No+Image';" />
+                    <button
+                        class="favorite-button absolute top-2 right-2 p-2 rounded-full bg-white shadow-md transition-colors duration-200
+                        ${isFavorited ? 'text-yellow-500' : 'text-gray-400 hover:text-yellow-400'}"
+                        aria-label="${isFavorited ? 'お気に入りから削除' : 'お気に入りに追加'}"
+                        data-action="toggle-favorite"
+                    >
+                        <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                        </svg>
+                    </button>
+                </div>
+                <h3 class="text-2xl font-bold text-blue-800 mb-2">${project.title}</h3>
+                <p class="text-gray-700 mb-4">${project.description}</p>
+
+                <div class="flex justify-between items-center mb-4 text-gray-600 text-sm">
+                    <span>総投資額: <span class="font-bold text-green-600">${project.investedCoins.toFixed(2)} MC</span></span>
+                     <span>投資人数: <span class="font-bold">${new Set(project.investors.map(inv => inv.userId)).size}人</span></span>
+                </div>
+
+                <div class="mb-4">
+                    <span class="font-bold text-gray-700">募集スキル: </span>
+                    ${project.requiredSkills.length > 0 ? project.requiredSkills.map((skill, index) => `
+                        <span key="${index}" class="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full mr-2 mb-1">
+                            ${skill}
+                        </span>`).join('') : '<span class="text-gray-500">なし</span>'}
+                </div>
+
+                <div class="mb-4">
+                    <span class="font-bold text-gray-700">現在のステージ: </span>
+                    <span class="font-bold text-purple-600">${project.stage}</span>
+                    ${project.stageImage ? `<img src="${project.stageImage}" alt="${project.stage} Stage" class="mt-2 w-24 h-auto rounded-md" onerror="this.onerror=null;this.src='https://placehold.co/100x30/cccccc/333333?text=Stage';" />` : ''}
+                </div>
+
+                <button class="text-blue-600 hover:underline text-sm mb-4 block view-details-button" data-action="toggle-details">
+                    詳細を見る
+                </button>
+
+                <div class="project-details mt-4 border-t border-gray-200 pt-4 hidden">
+                    <p class="text-gray-700 mb-4">${project.fullDescription}</p>
+
+                    <button
+                        class="w-full bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 mb-4"
+                        data-action="view-business-plan"
+                    >
+                        事業計画書を閲覧
+                    </button>
+
+                    ${currentUser && userHasRequiredSkills && !isUserAMember && project.status !== 'Successful' && project.status !== 'Failed' ? `
+                        <div class="mt-2 mb-4">
+                            <button
+                                class="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
+                                data-action="join-project"
+                            >
+                                プロジェクトへの参画を希望
+                            </button>
+                        </div>
+                    ` : ''}
+                    ${currentUser && isUserAMember && currentUser.id !== project.proposerId ? `
+                        <div class="mt-2 mb-4">
+                            <button
+                                class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
+                                data-action="leave-project"
+                            >
+                                プロジェクトを脱退
+                            </button>
+                        </div>
+                    ` : ''}
+
+                    <div class="flex justify-between items-center mb-4 text-gray-600 text-sm">
+                        <span>提案者: <span class="font-semibold">${proposer ? proposer.username : '不明'}</span></span>
+                    </div>
+
+                    ${investmentByDepartment.length > 0 ? `
+                        <div class="mb-4">
+                            <h4 class="font-bold text-gray-700 mb-2">部署別投資額分布</h4>
+                            <div class="flex flex-col space-y-1">
+                                ${investmentByDepartment.sort((a,b) => b.amount - a.amount).map((data, index) => {
+                                    const totalForDepartmentChart = investmentByDepartment.reduce((sum, item) => sum + item.amount, 0);
+                                    const barWidth = totalForDepartmentChart > 0 ? (data.amount / totalForDepartmentChart) * 100 : 0;
+                                    return `
+                                        <div key="${index}" class="flex items-center text-xs">
+                                            <span class="w-24 text-right pr-2 overflow-hidden text-ellipsis whitespace-nowrap">
+                                                ${data.department}
+                                            </span>
+                                            <div class="flex-grow bg-blue-200 h-4 rounded-sm">
+                                                <div
+                                                    class="bg-blue-600 h-4 rounded-sm"
+                                                    style="width: ${barWidth}%"
+                                                ></div>
+                                            </div>
+                                            <span class="ml-2">${barWidth.toFixed(1)}%</span>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${investmentByPosition.length > 0 ? `
+                        <div class="mb-4">
+                            <h4 class="font-bold text-gray-700 mb-2">役職別投資額分布</h4>
+                            <div class="flex flex-col space-y-1">
+                                ${investmentByPosition.sort((a,b) => b.amount - a.amount).map((data, index) => {
+                                    const totalForPositionChart = investmentByPosition.reduce((sum, item) => sum + item.amount, 0);
+                                    const barWidth = totalForPositionChart > 0 ? (data.amount / totalForPositionChart) * 100 : 0;
+                                    return `
+                                        <div key="${index}" class="flex items-center text-xs">
+                                            <span class="w-24 text-right pr-2 overflow-hidden text-ellipsis whitespace-nowrap">
+                                                ${data.position}
+                                            </span>
+                                            <div class="flex-grow bg-green-200 h-4 rounded-sm">
+                                                <div
+                                                    class="bg-green-600 h-4 rounded-sm"
+                                                    style="width: ${barWidth}%"
+                                                ></div>
+                                            </div>
+                                            <span class="ml-2">${barWidth.toFixed(1)}%</span>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${project.investors.length > 0 ? `
+                        <div class="mb-4">
+                            <span class="font-bold text-gray-700">投資内訳 (上位3名): </span>
+                            <div class="mt-2 space-y-1">
+                                ${top3Investors.map((investor, index) => `
+                                    <div key="${index}" class="flex justify-between text-sm text-gray-600 bg-gray-50 p-2 rounded-md">
+                                        <span>${investor.name || '不明'}</span>
+                                        <span class="font-semibold">${investor.amount.toFixed(2)} MC</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div class="mb-4">
+                        <span class="font-bold text-gray-700">参加メンバー: </span>
+                        ${project.members.length > 0 ? project.members.map((memberId, index) => `
+                            <span key="${index}" class="inline-block bg-gray-100 text-gray-800 text-xs font-semibold px-2.5 py-0.5 rounded-full mr-2 mb-1">
+                                ${getUserById(memberId)?.username || '不明'}
+                            </span>`).join('') : '<span class="text-gray-500">なし</span>'}
+                    </div>
+
+                    <div class="mt-6 border-t pt-4">
+                        <h4 class="font-bold text-gray-700 mb-3">コメント</h4>
+                        <div id="comments-container-${project.id}" class="space-y-3 mb-4">
+                            ${project.comments && project.comments.length > 0 ? project.comments.map(comment => `
+                                <div class="bg-gray-50 p-3 rounded-lg text-sm">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="font-semibold text-gray-800">${comment.anonymous ? '匿名ユーザー' : (getUserById(comment.userId)?.username || '不明')}</span>
+                                        <span class="text-gray-500 text-xs">${new Date(comment.timestamp).toLocaleString()}</span>
+                                    </div>
+                                    <p class="text-gray-700">${comment.text}</p>
+                                    ${comment.type === 'cheer' ? '<span class="inline-block bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full mt-2">応援コメント</span>' : ''}
+                                     <div class="flex space-x-2 mt-2">
+                                        <button class="flex items-center text-sm text-gray-600 hover:text-blue-500 emotion-button" data-comment-id="${comment.id}" data-emotion-type="like">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21H3v-7a2 2 0 012-2h7.071l-.184-1.222a1.999 1.999 0 011.196-2.617l.794-.486z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2"></path></svg>
+                                            <span class="emotion-count">${comment.emotions?.like || 0}</span> いいね
+                                        </button>
+                                        <button class="flex items-center text-sm text-gray-600 hover:text-purple-500 emotion-button" data-comment-id="${comment.id}" data-emotion-type="thanks">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                                            <span class="emotion-count">${comment.emotions?.thanks || 0}</span> ありがとう
+                                        </button>
+                                        <button class="flex items-center text-sm text-gray-600 hover:text-green-500 emotion-button" data-comment-id="${comment.id}" data-emotion-type="empathy">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            <span class="emotion-count">${comment.emotions?.empathy || 0}</span> 共感
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('') : '<p class="text-gray-500 text-sm">まだコメントはありません。</p>'}
+                        </div>
+                        <div class="flex flex-col space-y-2">
+                            <textarea
+                                class="w-full p-2 border border-gray-300 rounded-lg text-sm comment-input"
+                                rows="2"
+                                placeholder="コメントを入力..."
+                            ></textarea>
+                            <div class="flex items-center space-x-2">
+                                <label class="flex items-center text-sm text-gray-700 cursor-pointer">
+                                    <input type="checkbox" class="mr-1 anonymous-comment-checkbox">
+                                    匿名で投稿
+                                </label>
+                                <button
+                                    class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold py-2 px-3 rounded-lg transition duration-300 ease-in-out post-comment-button"
+                                    data-project-id="${project.id}" data-comment-type="normal"
+                                >
+                                    コメント投稿
+                                </button>
+                                <button
+                                    class="bg-green-500 hover:bg-green-600 text-white text-sm font-bold py-2 px-3 rounded-lg transition duration-300 ease-in-out post-cheer-button"
+                                    data-project-id="${project.id}" data-comment-type="cheer"
+                                >
+                                    応援コメント
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 border-t pt-4">
+                        <h4 class="font-bold text-gray-700 mb-3">プロジェクト進捗タイムライン</h4>
+                        <div class="relative pl-4">
+                            <div class="absolute h-full border-l-2 border-gray-300 left-0 top-0"></div>
+                            ${project.timeline && project.timeline.length > 0 ? project.timeline.sort((a,b) => a.timestamp - b.timestamp).map(item => `
+                                <div class="mb-4 relative">
+                                    <div class="absolute w-3 h-3 bg-blue-500 rounded-full -left-1.5 top-1"></div>
+                                    <p class="text-sm text-gray-500">${new Date(item.timestamp).toLocaleDateString()} - ${new Date(item.timestamp).toLocaleTimeString()}</p>
+                                    <p class="font-semibold text-gray-800">${item.stage}</p>
+                                    <p class="text-gray-700 text-sm">${item.description}</p>
+                                </div>
+                            `).join('') : '<p class="text-gray-500 text-sm">まだ進捗はありません。</p>'}
+                        </div>
+                    </div>
+
+                    <div class="mt-6 border-t pt-4">
+                        <h4 class="font-bold text-gray-700 mb-3">ナレッジ共有</h4>
+                        <div id="knowledge-posts-container-${project.id}" class="space-y-3 mb-4">
+                            ${project.knowledgePosts && project.knowledgePosts.length > 0 ? project.knowledgePosts.map(post => `
+                                <div class="bg-gray-50 p-3 rounded-lg text-sm">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="font-semibold text-gray-800">${post.title}</span>
+                                        <span class="text-gray-500 text-xs">${new Date(post.timestamp).toLocaleDateString()} by ${getUserById(post.userId)?.username || '不明'}</span>
+                                    </div>
+                                    <p class="text-gray-700">${post.content}</p>
+                                    ${post.isFailure ? '<span class="inline-block bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded-full mt-2">失敗事例</span>' : ''}
+                                     <div class="flex space-x-2 mt-2">
+                                        <button class="flex items-center text-sm text-gray-600 hover:text-blue-500 emotion-button" data-knowledge-id="${post.id}" data-emotion-type="like">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21H3v-7a2 2 0 012-2h7.071l-.184-1.222a1.999 1.999 0 011.196-2.617l.794-.486z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2"></path></svg>
+                                            <span class="emotion-count">${post.emotions?.like || 0}</span> いいね
+                                        </button>
+                                        <button class="flex items-center text-sm text-gray-600 hover:text-purple-500 emotion-button" data-knowledge-id="${post.id}" data-emotion-type="thanks">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                                            <span class="emotion-count">${post.emotions?.thanks || 0}</span> ありがとう
+                                        </button>
+                                        <button class="flex items-center text-sm text-gray-600 hover:text-green-500 emotion-button" data-knowledge-id="${post.id}" data-emotion-type="empathy">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            <span class="emotion-count">${post.emotions?.empathy || 0}</span> 共感
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('') : '<p class="text-gray-500 text-sm">まだナレッジは共有されていません。</p>'}
+                        </div>
+                        <button class="w-full bg-purple-500 hover:bg-purple-600 text-white text-sm font-bold py-2 px-3 rounded-lg transition duration-300 ease-in-out open-knowledge-modal" data-project-id="${project.id}">
+                            ナレッジを投稿
+                        </button>
+                    </div>
+
+                </div>
+
+                ${currentUser && project.status === 'Proposed' ? `
+                    <div class="flex items-center space-x-3 mt-4">
+                        <input
+                            type="number"
+                            placeholder="投資額 (MC)"
+                            class="flex-grow px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 investment-amount-input"
+                            min="1"
+                        />
+                        <button
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 invest-button"
+                            data-action="invest"
+                        >
+                            投資
+                        </button>
+                    </div>
+                ` : ''}
+            `;
+            return projectCardDiv;
+        };
+
+        // Render Dashboard (main rendering function)
+        const renderDashboard = () => {
+            renderHeader(); // Update header info
+
+            // 他のセクションを非表示にし、プロジェクト一覧を表示
+            document.getElementById('user-profile-section').classList.add('hidden');
+            document.getElementById('challenge-board-section').classList.add('hidden');
+            document.getElementById('knowledge-archive-section').classList.add('hidden');
+            document.getElementById('notifications-section').classList.add('hidden'); // 通知セクションを非表示
+            document.getElementById('weekly-highlight-section').classList.add('hidden'); // 週次ハイライトセクションを非表示
+            document.getElementById('admin-settings-section').classList.add('hidden'); // 管理設定セクションを非表示
+            document.getElementById('user-search-section').classList.add('hidden'); // ★★ ユーザー検索セクションを非表示
+
+
+            document.getElementById('projects-container').classList.remove('hidden'); // プロジェクトコンテナは常に表示する
+            document.getElementById('sort-by').closest('div').classList.remove('hidden'); // ソートドロップダウンを再表示
+            document.getElementById('projects-container').closest('.container').querySelector('h2').textContent = 'すべてのプロジェクト';
+
+
+            const projectsContainer = document.getElementById('projects-container');
+            const noProjectsMessage = document.getElementById('no-projects-message');
+            projectsContainer.innerHTML = ''; // Clear existing projects
+
+            const sortBy = document.getElementById('sort-by').value;
+
+            // Sort projects based on selected option
+            let sortedProjects = [...projects];
+            sortedProjects.sort((a, b) => {
+                if (sortBy === 'investedCoins') {
+                    return b.investedCoins - a.investedCoins;
+                } else if (sortBy === 'favoriteCount') {
+                    return b.favoriteCount - a.favoriteCount;
+                } else if (sortBy === 'myFavorites') {
+                    const aIsFavorite = currentUser?.favorites.includes(a.id) ? 1 : 0;
+                    const bIsFavorite = currentUser?.favorites.includes(b.id) ? 1 : 0;
+                    // お気に入りのプロジェクトを上位に、それ以外は元の順序を維持
+                    if (aIsFavorite && !bIsFavorite) return -1;
+                    if (!aIsFavorite && bIsFavorite) return 1;
+                    return 0; // お気に入りでない場合は元の順序
+                } else if (sortBy === 'investorCount') {
+                    return new Set(b.investors.map(inv => inv.userId)).size - new Set(a.investors.map(inv => inv.userId)).size;
+                } else if (sortBy === 'stage') {
+                    const stageIndexA = stageOrder.indexOf(a.stage);
+                    const stageIndexB = stageOrder.indexOf(b.stage);
+                    return stageIndexA - stageIndexB;
+                }
+                return 0;
+            });
+
+            if (sortedProjects.length > 0) {
+                noProjectsMessage.classList.add('hidden');
+                // 自分のミッションと重なるプロジェクトに優先表示 (⑥ パーソナルミッションとの意味接続)
+                if (currentUser && currentUser.interestThemes && currentUser.interestThemes.length > 0) {
+                    sortedProjects.sort((a, b) => {
+                        const aMatches = currentUser.interestThemes.some(theme => a.requiredSkills.includes(theme) || a.title.includes(theme));
+                        const bMatches = currentUser.interestThemes.some(theme => b.requiredSkills.includes(theme) || b.title.includes(theme));
+                        if (aMatches && !bMatches) return -1;
+                        if (!aMatches && bMatches) return 1;
+                        return 0;
+                    });
+                }
+                sortedProjects.forEach(project => {
+                    projectsContainer.appendChild(createProjectCardElement(project));
+                });
+            } else {
+                noProjectsMessage.classList.remove('hidden');
+            }
+        };
+
+        // Section Display Controller
+        const showSection = (sectionName) => {
+            // すべてのコンテンツセクションを非表示にする
+            document.getElementById('projects-container').classList.add('hidden');
+            document.getElementById('no-projects-message').classList.add('hidden');
+            document.getElementById('sort-by').closest('div').classList.add('hidden'); // ソートドロップダウンを非表示に
+
+            const mainTitle = document.getElementById('projects-container').closest('.container').querySelector('h2');
+
+
+            // 特定のセクションを表示する
+            const sections = ['user-profile', 'challenge-board', 'knowledge-archive', 'notifications', 'weekly-highlight', 'admin-settings', 'user-search'];
+            sections.forEach(sec => {
+                const element = document.getElementById(`${sec}-section`);
+                if (element) element.classList.add('hidden'); // すべてのセクションを一旦非表示
+            });
+
+            if (sectionName === 'project-list') {
+                // プロジェクト一覧に戻る場合
+                document.getElementById('projects-container').classList.remove('hidden');
+                document.getElementById('sort-by').closest('div').classList.remove('hidden');
+                mainTitle.textContent = 'すべてのプロジェクト';
+                renderDashboard(); // プロジェクト一覧表示時は再レンダリング
+            } else {
+                // 特定のセクションを表示する場合
+                const targetSection = document.getElementById(`${sectionName}-section`);
+                if (targetSection) {
+                    targetSection.classList.remove('hidden');
+                    // 各セクションのレンダリング関数を呼び出す
+                    const renderFunctions = {
+                        'user-profile': renderUserProfile,
+                        'user-search': renderUserSearch,
+                        'challenge-board': renderChallengeBoard,
+                        'knowledge-archive': renderKnowledgeArchive,
+                        'notifications': renderNotifications,
+                        'weekly-highlight': renderWeeklyHighlight,
+                        'admin-settings': renderAdminSettings
+                    };
+                     if (renderFunctions[sectionName]) {
+                        renderFunctions[sectionName]();
+                    }
+
+                    // 各セクションのタイトルを設定
+                    const titles = {
+                        'user-profile': 'プロフィール',
+                        'user-search': 'ユーザー検索',
+                        'challenge-board': '課題・チャレンジ掲示板',
+                        'knowledge-archive': 'ナレッジアーカイブ',
+                        'notifications': '通知',
+                        'weekly-highlight': '週次ハイライト',
+                        'admin-settings': '管理・制度連携'
+                    };
+                    if (titles[sectionName]) {
+                        mainTitle.textContent = titles[sectionName];
+                    }
+                }
+            }
+            // モバイルフッターのボタンのアクティブ状態を更新
+            document.querySelectorAll('.nav-button').forEach(btn => {
+                if (btn.dataset.section === sectionName) {
+                    btn.classList.add('text-blue-600');
+                    btn.classList.remove('text-gray-600');
+                } else {
+                    btn.classList.remove('text-blue-600');
+                    btn.classList.add('text-gray-600');
+                }
+            });
+             // ヘッダーの通知ドロップダウンが開いていれば閉じる
+            const notificationDropdown = document.getElementById('notification-dropdown');
+            if (notificationDropdown && !notificationDropdown.classList.contains('hidden')) {
+                notificationDropdown.classList.add('hidden');
+            }
+        };
+
+
+        // Event Listeners for dynamic elements (using event delegation)
+        const initEventListeners = () => {
+             // ★★ ソート機能のイベントリスナー ★★
+            const sortByElement = document.getElementById('sort-by');
+            if (sortByElement) {
+                sortByElement.addEventListener('change', renderDashboard);
+            }
+
+            document.addEventListener('click', (event) => {
+                const target = event.target;
+                const closestButton = target.closest('button');
+
+                // プロジェクトカード内のアクション
+                const projectCard = target.closest('.bg-white.rounded-xl.shadow-lg[data-project-id]');
+                if (projectCard) {
+                    const projectId = projectCard.dataset.projectId;
+                    const project = projects.find(p => p.id === projectId);
+                    if (!project) return;
+
+                    const action = target.dataset.action || target.closest('[data-action]')?.dataset.action;
+
+                    if (action === 'toggle-details') {
+                        const detailsDiv = projectCard.querySelector('.project-details');
+                        const button = target.closest('button');
+                        if (detailsDiv.classList.contains('hidden')) {
+                            detailsDiv.classList.remove('hidden');
+                            if (button) button.textContent = '詳細を隠す';
+                        } else {
+                            detailsDiv.classList.add('hidden');
+                            if (button) button.textContent = '詳細を見る';
+                        }
+                    } else if (action === 'toggle-favorite') {
+                        toggleFavorite(project.id);
+                        showNotification(currentUser.favorites.includes(project.id) ? 'お気に入りに追加しました！' : 'お気に入りから削除しました。', 'success');
+                        renderDashboard(); // Re-render to update favorite icon
+                    } else if (action === 'invest') {
+                        const amountInput = projectCard.querySelector('.investment-amount-input');
+                        const amount = parseFloat(amountInput.value);
+
+                        if (isNaN(amount) || amount <= 0) {
+                            showNotification('有効な投資額を入力してください。', 'error');
+                            return;
+                        }
+                        if (currentUser.miraiCoins < amount) {
+                            showNotification('MIRAI Coinが不足しています。', 'error');
+                            return;
+                        }
+
+                        updateUserCoins(currentUser.id, -amount);
+                        updateUserInvestments(currentUser.id, project.id, amount);
+                        investInProject(project.id, currentUser.id, amount);
+                        amountInput.value = '';
+                        showNotification(`${amount} MCを投資しました！`, 'success');
+                        addNotification({
+                                id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                                type: 'investment',
+                                message: `${currentUser.username}さんが「${project.title}」に${amount}MCを投資しました。`,
+                                projectId: project.id,
+                                read: false,
+                                timestamp: Date.now(),
+                            }, project.proposerId);
+                        renderDashboard(); // Re-render to update project and user data
+                    } else if (action === 'join-project') {
+                        const userHasRequiredSkills = currentUser && project.requiredSkills.every(skill => currentUser.skills.includes(skill));
+                        const isUserAMember = currentUser && project.members.includes(currentUser.id);
+
+                        if (currentUser && userHasRequiredSkills && !isUserAMember) {
+                            addProjectMember(project.id, currentUser.id);
+                            showNotification(`プロジェクト「${project.title}」への参画を希望しました！`, 'success');
+                            addNotification({
+                                id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                                type: 'join_request',
+                                message: `${currentUser.username}さんが「${project.title}」への参画を希望しています。`,
+                                projectId: project.id,
+                                read: false,
+                                timestamp: Date.now(),
+                            }, project.proposerId); // 提案者に通知
+                            renderDashboard(); // Re-render to update member status
+                        } else if (isUserAMember) {
+                            showNotification('すでにこのプロジェクトのメンバーです。', 'error');
+                        } else {
+                            showNotification('参画に必要なスキルが不足しています。', 'error');
+                        }
+                    } else if (action === 'leave-project') {
+                        if (currentUser && currentUser.id !== project.proposerId && project.members.includes(currentUser.id)) {
+                            removeProjectMember(project.id, currentUser.id);
+                            showNotification(`プロジェクト「${project.title}」を脱退しました。`, 'success');
+                             addNotification({
+                                id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                                type: 'leave_project',
+                                message: `${currentUser.username}さんが「${project.title}」を脱退しました。`,
+                                projectId: project.id,
+                                read: false,
+                                timestamp: Date.now(),
+                            }, project.proposerId); // 提案者に通知
+                            renderDashboard(); // Re-render to update member status
+                        } else if (currentUser.id === project.proposerId) {
+                            showNotification('提案者はプロジェクトを脱退できません。', 'error');
+                        } else if (!project.members.includes(currentUser.id)) {
+                            showNotification('このプロジェクトのメンバーではありません。', 'error');
+                        }
+                    } else if (action === 'view-business-plan') {
+                        showNotification(`「${project.title}」の事業計画書を表示します (実際にはダミーです)。`, 'info');
+                    } else if (target.classList.contains('post-comment-button') || target.classList.contains('post-cheer-button')) {
+                        // コメント投稿ロジック
+                        const commentInput = projectCard.querySelector('.comment-input');
+                        const anonymousCheckbox = projectCard.querySelector('.anonymous-comment-checkbox');
+                        const commentText = commentInput.value.trim();
+                        const isAnonymous = anonymousCheckbox.checked;
+                        const commentType = target.dataset.commentType; // 'normal' or 'cheer'
+
+                        if (commentText) {
+                            const newComment = {
+                                id: `comment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Unique ID for comment
+                                userId: currentUser.id,
+                                text: commentText,
+                                timestamp: Date.now(),
+                                anonymous: isAnonymous,
+                                type: commentType, // コメントタイプを追加
+                                emotions: { like: 0, thanks: 0, empathy: 0 } // 感情UIの初期値
+                            };
+                            project.comments.push(newComment);
+                            saveToLocalStorage('miraiCoinProjects', projects);
+                            showNotification('コメントを投稿しました！', 'success');
+                            addNotification({
+                                id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                                type: 'comment',
+                                message: `${isAnonymous ? '匿名ユーザー' : currentUser.username}さんが「${project.title}」にコメントしました。`,
+                                projectId: project.id,
+                                read: false,
+                                timestamp: Date.now(),
+                            }, project.proposerId); // 提案者に通知
+                            renderDashboard(); // コメントを反映するため再レンダリング
+                        } else {
+                            showNotification('コメントを入力してください。', 'error');
+                        }
+                    } else if (target.classList.contains('open-knowledge-modal')) {
+                        // ナレッジ投稿モーダルを開く
+                        openKnowledgeModal(project.id);
+                    } else if (target.classList.contains('emotion-button')) {
+                        // 感情ボタンのロジック
+                        const emotionType = target.dataset.emotionType;
+                        const commentId = target.dataset.commentId;
+                        const knowledgeId = target.dataset.knowledgeId;
+
+                        if (commentId) {
+                            project.comments = project.comments.map(comment => {
+                                if (comment.id === commentId) {
+                                    comment.emotions = comment.emotions || { like: 0, thanks: 0, empathy: 0 };
+                                    comment.emotions[emotionType]++;
+                                }
+                                return comment;
+                            });
+                            saveToLocalStorage('miraiCoinProjects', projects);
+                            showNotification(`${emotionType}しました！`, 'success');
+                            renderDashboard(); // UI更新のため再レンダリング
+                        } else if (knowledgeId) {
+                             project.knowledgePosts = project.knowledgePosts.map(post => {
+                                if (post.id === knowledgeId) {
+                                    post.emotions = post.emotions || { like: 0, thanks: 0, empathy: 0 };
+                                    post.emotions[emotionType]++;
+                                }
+                                return post;
+                            });
+                            saveToLocalStorage('miraiCoinProjects', projects);
+                            showNotification(`${emotionType}しました！`, 'success');
+                            renderDashboard(); // UI更新のため再レンダリング
+                        }
+                    }
+                }
+
+                // ★★ 修正点: ヘッダー、フッター、その他ページ全体のクリックイベントを一元管理 ★★
+                if (target.id === 'home-button' || target.closest('#home-button')) {
+                    showSection('project-list');
+                } else if (closestButton) {
+                    const buttonId = closestButton.id;
+                    const buttonSection = closestButton.closest('.nav-button')?.dataset.section;
+                    if (buttonId === 'view-profile-button') showSection('user-profile');
+                    else if (buttonId === 'view-user-search-button') showSection('user-search');
+                    else if (buttonId === 'view-challenge-board-button') showSection('challenge-board');
+                    else if (buttonId === 'view-knowledge-archive-button') showSection('knowledge-archive');
+                    else if (buttonId === 'view-weekly-highlight-button') showSection('weekly-highlight');
+                    else if (buttonId === 'notification-bell' || target.closest('#notification-bell')) toggleNotificationDropdown();
+                    else if (buttonId === 'mark-all-read-button') markAllNotificationsAsRead();
+                    else if (buttonId === 'view-all-notifications-button') showSection('notifications');
+                    else if (buttonSection) showSection(buttonSection);
+                }
+
+
+                // 課題カード内のアクション
+                const challengeCard = target.closest('.bg-gray-50.rounded-lg.shadow-sm.border[data-challenge-id]');
+                if (challengeCard) {
+                    const challengeId = challengeCard.dataset.challengeId;
+                    const challenge = challengePosts.find(c => c.id === challengeId);
+                    if (!challenge) return;
+
+                    const action = target.dataset.action || target.closest('[data-action]')?.dataset.action;
+
+                    if (action === 'toggle-challenge-details') {
+                        const detailsDiv = challengeCard.querySelector('.challenge-details');
+                        const button = target.closest('button');
+                        if (detailsDiv.classList.contains('hidden')) {
+                            detailsDiv.classList.remove('hidden');
+                            if (button) button.textContent = '詳細を隠す';
+                        } else {
+                            detailsDiv.classList.add('hidden');
+                            if (button) button.textContent = '詳細を見る';
+                        }
+                    } else if (target.classList.contains('post-challenge-comment-button')) {
+                        const commentInput = challengeCard.querySelector('.challenge-comment-input');
+                        const anonymousCheckbox = challengeCard.querySelector('.anonymous-challenge-comment-checkbox');
+                        const commentText = commentInput.value.trim();
+                        const isAnonymous = anonymousCheckbox.checked;
+
+                        if (commentText) {
+                            const newComment = {
+                                userId: currentUser.id,
+                                text: commentText,
+                                timestamp: Date.now(),
+                                anonymous: isAnonymous
+                            };
+                            challenge.comments.push(newComment);
+                            saveToLocalStorage('miraiCoinChallenges', challengePosts);
+                            showNotification('コメントを投稿しました！', 'success');
+                            renderChallengeBoard(); // 課題コメントを反映するため再レンダリング
+                        } else {
+                            showNotification('コメントを入力してください。', 'error');
+                        }
+                    } else if (target.classList.contains('view-project-link')) {
+                        // 課題から関連プロジェクトへのリンクをクリックした場合
+                        const linkedProjectId = target.dataset.projectId;
+                        showNotification(`プロジェクトID: ${linkedProjectId} の詳細を表示します (擬似)。`, 'info');
+                        showSection('project-list');
+                        setTimeout(() => {
+                            const projectElement = document.querySelector(`[data-project-id="${linkedProjectId}"]`);
+                            if (projectElement) {
+                                projectElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                projectElement.classList.add('ring-4', 'ring-blue-500', 'ring-opacity-75'); // ハイライト
+                                setTimeout(() => {
+                                    projectElement.classList.remove('ring-4', 'ring-blue-500', 'ring-opacity-75');
+                                }, 3000);
+                            }
+                        }, 100); // セクション切り替えの描画を待つ
+                    }
+                }
+
+                // 終了プロジェクトカード内のアクション
+                const closedProjectCardButton = target.closest('.view-archive-details-button');
+                if (closedProjectCardButton && closedProjectCardButton.dataset.action === 'view-closed-project-details') {
+                    const projectId = closedProjectCardButton.dataset.projectId;
+                    openClosedProjectDetailsModal(projectId);
+                } else if (target.dataset.action === 'output-deliverables') {
+                    const projectId = target.closest('.bg-green-50, .bg-red-50')?.dataset.projectId; // 親要素からIDを取得
+                    if (projectId) {
+                        outputDeliverables(projectId);
+                    }
+                } else if (target.classList.contains('emotion-exp-button')) {
+                    // 実験プロジェクトの感情ボタン
+                    const expId = target.dataset.expId;
+                    const emotionType = target.dataset.emotionType;
+                    experimentalProjects = experimentalProjects.map(exp => {
+                        if (exp.id === expId) {
+                            exp.emotions = exp.emotions || { cheer: 0, thanks: 0, empathy: 0 };
+                            exp.emotions[emotionType]++;
+                        }
+                        return exp;
+                    });
+                    saveToLocalStorage('miraiCoinExperimentalProjects', experimentalProjects);
+                    showNotification(`${emotionType}しました！ (実験プロジェクト)`, 'success');
+                    renderChallengeMode(); // UI更新
+                }
+
+                // ★★ ユーザープロフィール/検索ページのソーシャルアクション ★★
+                if (target.classList.contains('follow-button') || target.classList.contains('unfollow-button')) {
+                    const targetUserId = target.dataset.userId;
+                    toggleFollow(targetUserId);
+                } else if (target.classList.contains('scout-button')) {
+                     const targetUserId = target.dataset.userId;
+                     sendScoutOffer(targetUserId);
+                } else if (target.classList.contains('recommend-button')) {
+                    const targetUserId = target.dataset.userId;
+                    recommendUser(targetUserId);
+                } else if (target.classList.contains('accept-scout-button') || target.classList.contains('reject-scout-button')) {
+                    const offerId = target.dataset.offerId;
+                    const action = target.classList.contains('accept-scout-button') ? 'accept' : 'reject';
+                    handleScoutOffer(offerId, action);
+                }
+            });
+
+        };
+
+
+        // Knowledge Post Modal Logic
+        let currentProjectIdForKnowledge = null;
+
+        const openKnowledgeModal = (projectId) => {
+            currentProjectIdForKnowledge = projectId;
+            const modalHtml = `
+                <div id="knowledge-modal" class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+                    <div class="bg-white p-6 rounded-lg shadow-xl w-11/12 md:w-1/2 lg:w-1/3">
+                        <h3 class="text-xl font-bold mb-4">ナレッジを投稿</h3>
+                        <input type="text" id="knowledge-title-input" class="w-full p-2 border border-gray-300 rounded-lg mb-3" placeholder="タイトル" />
+                        <textarea id="knowledge-content-input" class="w-full p-2 border border-gray-300 rounded-lg mb-3" rows="5" placeholder="詳細な内容"></textarea>
+                        <label class="flex items-center mb-4">
+                            <input type="checkbox" id="is-failure-checkbox" class="mr-2">
+                            失敗事例として投稿
+                        </label>
+                        <div class="flex justify-end space-x-3">
+                            <button id="cancel-knowledge-post" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg">キャンセル</button>
+                            <button id="submit-knowledge-post" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg">投稿</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            document.getElementById('cancel-knowledge-post').addEventListener('click', closeKnowledgeModal);
+            document.getElementById('submit-knowledge-post').addEventListener('click', submitKnowledgePost);
+        };
+
+        const closeKnowledgeModal = () => {
+            const modal = document.getElementById('knowledge-modal');
+            if (modal) {
+                modal.remove();
+                currentProjectIdForKnowledge = null;
+            }
+        };
+
+        const submitKnowledgePost = () => {
+            const titleInput = document.getElementById('knowledge-title-input');
+            const contentInput = document.getElementById('knowledge-content-input');
+            const isFailureCheckbox = document.getElementById('is-failure-checkbox');
+
+            const title = titleInput.value.trim();
+            const content = contentInput.value.trim();
+            const isFailure = isFailureCheckbox.checked;
+
+            if (title && content && currentProjectIdForKnowledge) {
+                const project = projects.find(p => p.id === currentProjectIdForKnowledge);
+                if (project) {
+                    project.knowledgePosts = project.knowledgePosts || [];
+                    const newKnowledgePost = {
+                        id: `knowledge-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Unique ID for knowledge post
+                        userId: currentUser.id,
+                        title: title,
+                        content: content,
+                        timestamp: Date.now(),
+                        isFailure: isFailure,
+                        emotions: { like: 0, thanks: 0, empathy: 0 } // 感情UIの初期値
+                    };
+                    project.knowledgePosts.push(newKnowledgePost);
+                    saveToLocalStorage('miraiCoinProjects', projects);
+                    showNotification('ナレッジを投稿しました！', 'success');
+                     addNotification({
+                        id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                        type: 'knowledge_post',
+                        message: `${currentUser.username}さんが「${project.title}」にナレッジを投稿しました。`,
+                        projectId: project.id,
+                        knowledgeId: newKnowledgePost.id,
+                        read: false,
+                        timestamp: Date.now(),
+                    }, project.proposerId); // 提案者に通知
+                    renderDashboard(); // プロジェクトのナレッジを反映するため再レンダリング
+                    closeKnowledgeModal();
+                }
+            } else {
+                showNotification('タイトルと内容を入力してください。', 'error');
+            }
+        };
+
+        // ① ユーザープロフィールと関連機能のレンダリング
+        const renderUserProfile = () => {
+            const userProfileSection = document.getElementById('user-profile-section');
+            if (!currentUser || !userProfileSection) return;
+
+            // 他のセクションを非表示にし、プロフィールセクションを表示
+            document.getElementById('projects-container').classList.add('hidden');
+            document.getElementById('no-projects-message').classList.add('hidden');
+            document.getElementById('sort-by').closest('div').classList.add('hidden');
+
+            userProfileSection.classList.remove('hidden');
+
+            // ユーザーの投資履歴（プロジェクト名と投資額）
+            const userInvestments = currentUser.investedProjects.map(inv => {
+                const project = projects.find(p => p.id === inv.projectId);
+                return project ? { title: project.title, amount: inv.amount } : null;
+            }).filter(Boolean);
+
+            // ユーザーの参画プロジェクト履歴
+            const userParticipatingProjects = projects.filter(project => project.members.includes(currentUser.id));
+
+            // フォロー中のユーザーのリスト
+            const followingUsers = currentUser.following.map(userId => getUserById(userId)).filter(Boolean);
+            // フォロワーのリスト
+            const followerUsers = allUsers.filter(user => user.following && user.following.includes(currentUser.id));
+
+
+            // おすすめユーザーのロジック (簡易版): スキルや関心テーマが一部一致するが、まだフォローしていないユーザー
+            const recommendedUsers = allUsers.filter(user =>
+                user.id !== currentUser.id &&
+                !currentUser.following.includes(user.id) &&
+                (user.skills.some(skill => currentUser.skills.includes(skill)) ||
+                 user.interestThemes.some(theme => currentUser.interestThemes.includes(theme)))
+            ).slice(0, 5); // 最大5人
+
+            userProfileSection.innerHTML = `
+                <div class="bg-white rounded-xl shadow-lg p-6 mb-6 border border-gray-200">
+                    <div class="flex items-center space-x-6 mb-6">
+                        <img src="${currentUser.profileImage}" alt="${currentUser.username}" class="w-24 h-24 rounded-full object-cover border-4 border-blue-200">
+                        <div>
+                            <h3 class="text-3xl font-bold text-gray-900 mb-1">${currentUser.username}</h3>
+                            <p class="text-gray-600 text-lg">${currentUser.department} / ${currentUser.position}</p>
+                            <p class="text-green-600 font-bold text-xl mt-1">残高: ${currentUser.miraiCoins.toFixed(2)} MC</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h4 class="text-xl font-bold text-gray-800 mb-3">スキル・関心</h4>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="font-semibold text-gray-700">スキル:</span>
+                            ${currentUser.skills.length > 0 ? currentUser.skills.map(skill => `<span class="bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full">${skill}</span>`).join('') : '<span class="text-gray-500 text-sm">未登録</span>'}
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="font-semibold text-gray-700">関心テーマ:</span>
+                            ${currentUser.interestThemes.length > 0 ? currentUser.interestThemes.map(theme => `<span class="bg-purple-100 text-purple-800 text-sm font-semibold px-3 py-1 rounded-full">${theme}</span>`).join('') : '<span class="text-gray-500 text-sm">未登録</span>'}
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h4 class="text-xl font-bold text-gray-800 mb-3">私のミッション・未来テーマ</h4>
+                        <p class="text-gray-700 bg-gray-50 p-3 rounded-lg">${currentUser.personalMission || '未登録'}</p>
+                         <button id="edit-mission-button" class="mt-3 bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-bold py-1.5 px-3 rounded-lg">
+                            ミッションを編集
+                        </button>
+                    </div>
+
+                    <div class="mb-6">
+                        <h4 class="text-xl font-bold text-gray-800 mb-3">参画プロジェクト履歴</h4>
+                        ${userParticipatingProjects.length > 0 ? `
+                            <ul class="list-disc pl-5 space-y-1 text-gray-700">
+                                ${userParticipatingProjects.map(project => `<li>${project.title} (ステージ: ${project.stage})</li>`).join('')}
+                            </ul>
+                        ` : '<p class="text-gray-500 text-sm">まだ参画プロジェクトはありません。</p>'}
+                    </div>
+
+                    <div class="mb-6">
+                        <h4 class="text-xl font-bold text-gray-800 mb-3">投資履歴</h4>
+                        ${userInvestments.length > 0 ? `
+                            <ul class="list-disc pl-5 space-y-1 text-gray-700">
+                                ${userInvestments.map(inv => `<li>${inv.title}: <span class="font-semibold">${inv.amount.toFixed(2)} MC</span></li>`).join('')}
+                            </ul>
+                        ` : '<p class="text-gray-500 text-sm">まだ投資履歴はありません。</p>'}
+                    </div>
+
+                    <div class="mb-6 border-t pt-4">
+                        <h4 class="text-xl font-bold text-gray-800 mb-3">貢献と評価</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-gray-700"><span class="font-semibold">貢献スコア:</span> <span class="text-blue-600 font-bold">${currentUser.contributionScore}</span></p>
+                                <p class="text-gray-700"><span class="font-semibold">現在のランク:</span> <span class="text-yellow-600 font-bold">${currentUser.rank}</span></p>
+                            </div>
+                            <div>
+                                <p class="text-gray-700"><span class="font-semibold">称号:</span> ${currentUser.achievements.length > 0 ? currentUser.achievements.map(ach => `<span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-0.5 rounded-full">${ach}</span>`).join(' ') : '<span class="text-gray-500 text-sm">なし</span>'}</p>
+                                <p class="text-gray-700"><span class="font-semibold">社内評価:</span> <span class="text-blue-700">${currentUser.internalEvaluation || '未入力'}</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="mb-6 border-t pt-4">
+                        <h4 class="text-xl font-bold text-gray-800 mb-3">ネットワーク</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <p class="font-semibold text-gray-700 mb-2">フォロー中 (${followingUsers.length}人):</p>
+                                ${followingUsers.length > 0 ? `
+                                    <ul class="space-y-1">
+                                        ${followingUsers.map(user => `
+                                            <li class="flex items-center justify-between bg-gray-50 p-2 rounded-lg text-sm">
+                                                <div class="flex items-center">
+                                                    <img src="${user.profileImage}" alt="${user.username}" class="w-6 h-6 rounded-full mr-2">
+                                                    <span>${user.username}</span>
+                                                </div>
+                                                <button class="bg-red-200 hover:bg-red-300 text-red-800 text-xs px-2 py-1 rounded-full unfollow-button" data-user-id="${user.id}">
+                                                    フォロー解除
+                                                </button>
+                                            </li>
+                                        `).join('')}
+                                    </ul>
+                                ` : '<p class="text-gray-500 text-sm">まだ誰もフォローしていません。</p>'}
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-700 mb-2">フォロワー (${followerUsers.length}人):</p>
+                                ${followerUsers.length > 0 ? `
+                                    <ul class="space-y-1">
+                                        ${followerUsers.map(user => `
+                                            <li class="flex items-center bg-gray-50 p-2 rounded-lg text-sm">
+                                                <img src="${user.profileImage}" alt="${user.username}" class="w-6 h-6 rounded-full mr-2">
+                                                <span>${user.username}</span>
+                                            </li>
+                                        `).join('')}
+                                    </ul>
+                                ` : '<p class="text-gray-500 text-sm">まだフォロワーがいません。</p>'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-6 border-t pt-4">
+                        <h4 class="text-xl font-bold text-gray-800 mb-3">あなたにおすすめのユーザー</h4>
+                        ${recommendedUsers.length > 0 ? `
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                ${recommendedUsers.map(user => `
+                                    <div class="bg-blue-50 p-4 rounded-lg shadow-sm flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <img src="${user.profileImage}" alt="${user.username}" class="w-10 h-10 rounded-full mr-3 object-cover">
+                                            <div>
+                                                <p class="font-semibold text-blue-800">${user.username}</p>
+                                                <p class="text-xs text-gray-600">${user.department}</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col space-y-1">
+                                            <button class="bg-blue-500 hover:bg-blue-600 text-white text-xs px-2 py-1 rounded-lg follow-button" data-user-id="${user.id}">
+                                                フォロー
+                                            </button>
+                                            <button class="bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 rounded-lg scout-button" data-user-id="${user.id}">
+                                                スカウト
+                                            </button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : '<p class="text-gray-500 text-sm">現在、おすすめのユーザーはいません。</p>'}
+                    </div>
+
+                    <div class="mb-6 border-t pt-4">
+                        <h4 class="text-xl font-bold text-gray-800 mb-3">スカウトオファー (擬似)</h4>
+                        ${currentUser.scoutOffers.length > 0 ? `
+                            <ul class="space-y-2">
+                                ${currentUser.scoutOffers.map(offer => `
+                                    <li class="bg-yellow-50 p-3 rounded-lg text-sm flex justify-between items-center">
+                                        <span>${offer.fromUser ? getUserById(offer.fromUser)?.username || '不明' : '不明'}から「${offer.projectName || '不明なプロジェクト'}」へのスカウト</span>
+                                        <div class="flex space-x-2">
+                                            <button class="bg-green-500 hover:bg-green-600 text-white text-xs px-2 py-1 rounded-lg accept-scout-button" data-offer-id="${offer.id}">承諾</button>
+                                            <button class="bg-red-500 hover:bg-red-600 text-white text-xs px-2 py-1 rounded-lg reject-scout-button" data-offer-id="${offer.id}">辞退</button>
+                                        </div>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        ` : '<p class="text-gray-500 text-sm">現在、スカウトオファーはありません。</p>'}
+                    </div>
+
+                </div>
+            `;
+            document.getElementById('edit-mission-button').addEventListener('click', openMissionEditModal);
+        };
+
+        // フォロー機能
+        const toggleFollow = (targetUserId) => {
+            if (!currentUser || currentUser.id === targetUserId) return;
+
+            const targetUser = getUserById(targetUserId);
+            if (!targetUser) return;
+
+            const isFollowing = currentUser.following.includes(targetUserId);
+
+            if (isFollowing) {
+                // フォロー解除
+                currentUser.following = currentUser.following.filter(id => id !== targetUserId);
+                targetUser.followers = targetUser.followers ? targetUser.followers.filter(id => id !== currentUser.id) : [];
+                showNotification(`${targetUser.username} のフォローを解除しました。`, 'success');
+            } else {
+                // フォロー
+                currentUser.following.push(targetUserId);
+                if (!targetUser.followers) targetUser.followers = [];
+                targetUser.followers.push(currentUser.id);
+                showNotification(`${targetUser.username} をフォローしました！`, 'success');
+                addNotification({
+                    id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                    type: 'follow',
+                    message: `${currentUser.username}さんがあなたをフォローしました。`,
+                    fromUserId: currentUser.id,
+                    read: false,
+                    timestamp: Date.now(),
+                }, targetUserId); // 受信者ID
+            }
+            saveToLocalStorage('miraiCoinCurrentUser', currentUser);
+            saveToLocalStorage('miraiCoinUsers', allUsers);
+
+            // 表示中のセクションに応じて再レンダリング
+            if (!document.getElementById('user-profile-section').classList.contains('hidden')) {
+                renderUserProfile();
+            }
+            if (!document.getElementById('user-search-section').classList.contains('hidden')) {
+                // 検索結果を更新する
+                filterAndRenderUsers();
+            }
+        };
+
+
+        // スカウト機能 (擬似)
+        const sendScoutOffer = (targetUserId) => {
+            if (!currentUser || currentUser.id === targetUserId) {
+                showNotification('自分自身をスカウトすることはできません。', 'error');
+                return;
+            }
+
+            const targetUser = getUserById(targetUserId);
+            if (!targetUser) return;
+
+            // ダミーでプロジェクトを選択させる（実際はモーダルなどで選択）
+            const availableProjects = projects.filter(p => p.proposerId === currentUser.id && !p.members.includes(targetUserId));
+            if (availableProjects.length === 0) {
+                showNotification('スカウトできるプロジェクトがありません。', 'error');
+                return;
+            }
+            const projectToScout = availableProjects[Math.floor(Math.random() * availableProjects.length)];
+
+            // 既にスカウト済みかチェック
+            if (targetUser.scoutOffers && targetUser.scoutOffers.some(offer => offer.fromUser === currentUser.id && offer.projectId === projectToScout.id)) {
+                showNotification('既にこのユーザーにスカウト済みです。', 'error');
+                return;
+            }
+
+            const newOffer = {
+                id: `scout-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                fromUser: currentUser.id,
+                projectId: projectToScout.id,
+                projectName: projectToScout.title,
+                timestamp: Date.now(),
+                status: 'pending'
+            };
+            targetUser.scoutOffers = targetUser.scoutOffers || [];
+            targetUser.scoutOffers.push(newOffer);
+            saveToLocalStorage('miraiCoinUsers', allUsers);
+            showNotification(`${targetUser.username} にスカウトを送りました！`, 'success');
+            addNotification({
+                id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                type: 'scout_offer',
+                message: `${currentUser.username}さんから「${projectToScout.title}」へのスカウトが届きました。`,
+                fromUserId: currentUser.id,
+                projectId: projectToScout.id,
+                read: false,
+                timestamp: Date.now(),
+            }, targetUserId); // 受信者ID
+        };
+
+        // 推薦機能 (擬似) - 機能は維持
+        const recommendUser = (targetUserId) => {
+             if (!currentUser || currentUser.id === targetUserId) {
+                showNotification('自分自身を推薦することはできません。', 'error');
+                return;
+            }
+            const targetUser = getUserById(targetUserId);
+            if (!targetUser) return;
+            if (targetUser.recommendations && targetUser.recommendations.includes(currentUser.id)) {
+                showNotification('既にこのユーザーを推薦済みです。', 'error');
+                return;
+            }
+            targetUser.recommendations = targetUser.recommendations || [];
+            targetUser.recommendations.push(currentUser.id);
+            saveToLocalStorage('miraiCoinUsers', allUsers);
+            showNotification(`${targetUser.username} を推薦しました！`, 'success');
+            addNotification({
+                id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                type: 'recommendation',
+                message: `${currentUser.username}さんがあなたを推薦しました。`,
+                fromUserId: currentUser.id,
+                read: false,
+                timestamp: Date.now(),
+            }, targetUserId);
+        };
+
+
+        // スカウトオファーの承諾/辞退
+        const handleScoutOffer = (offerId, action) => {
+            if (!currentUser) return;
+
+            currentUser.scoutOffers = currentUser.scoutOffers.filter(offer => {
+                if (offer.id === offerId) {
+                    if (action === 'accept') {
+                        // プロジェクトメンバーに追加
+                        addProjectMember(offer.projectId, currentUser.id);
+                        showNotification(`「${offer.projectName}」へのスカウトを承諾し、プロジェクトに参加しました！`, 'success');
+                         // 提案者に承諾通知
+                        addNotification({
+                            id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                            type: 'scout_accepted',
+                            message: `${currentUser.username}さんが「${offer.projectName}」へのスカウトを承諾しました！`,
+                            toUserId: offer.fromUser,
+                            projectId: offer.projectId,
+                            read: false,
+                            timestamp: Date.now(),
+                        }, offer.fromUser); // 受信者ID
+                    } else {
+                        showNotification(`「${offer.projectName}」へのスカウトを辞退しました。`, 'info');
+                         // 提案者に辞退通知
+                        addNotification({
+                            id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                            type: 'scout_rejected',
+                            message: `${currentUser.username}さんが「${offer.projectName}」へのスカウトを辞退しました。`,
+                            toUserId: offer.fromUser,
+                            projectId: offer.projectId,
+                            read: false,
+                            timestamp: Date.now(),
+                        }, offer.fromUser); // 受信者ID
+                    }
+                    return false; // オファーをリストから削除
+                }
+                return true;
+            });
+            saveToLocalStorage('miraiCoinCurrentUser', currentUser);
+            saveToLocalStorage('miraiCoinUsers', allUsers);
+            renderUserProfile(); // UI更新
+            renderDashboard(); // プロジェクト一覧も更新される可能性があるため
+        };
+
+        // 個人ミッション編集モーダル
+        const openMissionEditModal = () => {
+            const modalHtml = `
+                <div id="mission-edit-modal" class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+                    <div class="bg-white p-6 rounded-lg shadow-xl w-11/12 md:w-1/2 lg:w-1/3">
+                        <h3 class="text-xl font-bold mb-4">私のミッションを編集</h3>
+                        <textarea id="personal-mission-input" class="w-full p-2 border border-gray-300 rounded-lg mb-3" rows="3" placeholder="あなたのミッションを記述してください">${currentUser.personalMission || ''}</textarea>
+                        <div class="flex justify-end space-x-3">
+                            <button id="cancel-mission-edit" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg">キャンセル</button>
+                            <button id="save-mission-edit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">保存</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            document.getElementById('cancel-mission-edit').addEventListener('click', closeMissionEditModal);
+            document.getElementById('save-mission-edit').addEventListener('click', savePersonalMission);
+        };
+
+        const closeMissionEditModal = () => {
+            const modal = document.getElementById('mission-edit-modal');
+            if (modal) modal.remove();
+        };
+
+        const savePersonalMission = () => {
+            const missionInput = document.getElementById('personal-mission-input');
+            const newMission = missionInput.value.trim();
+
+            if (currentUser) {
+                currentUser.personalMission = newMission;
+                saveToLocalStorage('miraiCoinCurrentUser', currentUser);
+                allUsers = allUsers.map(user => user.id === currentUser.id ? currentUser : user);
+                saveToLocalStorage('miraiCoinUsers', allUsers);
+                showNotification('ミッションを更新しました！', 'success');
+                closeMissionEditModal();
+                renderUserProfile(); // プロフィールを再レンダリング
+            }
+        };
+
+        // ★★ ここからユーザー検索機能の追加 ★★
+        const renderUserSearch = () => {
+            const userSearchSection = document.getElementById('user-search-section');
+            if (!userSearchSection) return;
+
+            // 全スキル・全テーマのリストを作成
+            const allSkills = [...new Set(allUsers.flatMap(u => u.skills))].sort();
+
+            userSearchSection.innerHTML = `
+                <div class="bg-white rounded-xl shadow-lg p-6 mb-6 border border-gray-200">
+                    <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="user-search-name" class="block text-sm font-medium text-gray-700">名前・部署で検索</label>
+                            <input type="text" id="user-search-name" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="佐藤 太郎、技術開発部...">
+                        </div>
+                        <div>
+                            <label for="user-search-skills" class="block text-sm font-medium text-gray-700">スキルで検索</label>
+                            <div id="user-search-skills-container" class="mt-2 flex flex-wrap gap-2">
+                                ${allSkills.map(skill => `
+                                    <label class="flex items-center space-x-2 p-2 bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200">
+                                        <input type="checkbox" name="skill-filter" value="${skill}" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                        <span class="text-sm text-gray-800">${skill}</span>
+                                    </label>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    <div id="user-search-results" class="mt-6">
+                        </div>
+                    <p id="no-users-found-message" class="text-gray-600 text-lg text-center py-10 hidden">条件に一致するユーザーは見つかりませんでした。</p>
+                </div>
+            `;
+
+            // イベントリスナーを追加
+            document.getElementById('user-search-name').addEventListener('input', filterAndRenderUsers);
+            document.querySelectorAll('input[name="skill-filter"]').forEach(checkbox => {
+                checkbox.addEventListener('change', filterAndRenderUsers);
+            });
+
+            // 初期表示
+            filterAndRenderUsers();
+        };
+
+        const filterAndRenderUsers = () => {
+            const nameQuery = document.getElementById('user-search-name').value.toLowerCase();
+            const selectedSkills = Array.from(document.querySelectorAll('input[name="skill-filter"]:checked')).map(cb => cb.value);
+
+            const filtered = allUsers.filter(user => {
+                if (user.id === currentUser.id) return false; // 自分は除外
+
+                const nameMatch = user.username.toLowerCase().includes(nameQuery) || user.department.toLowerCase().includes(nameQuery);
+                const skillMatch = selectedSkills.length === 0 || selectedSkills.every(skill => user.skills.includes(skill));
+
+                return nameMatch && skillMatch;
+            });
+
+            const resultsContainer = document.getElementById('user-search-results');
+            const noResultsMessage = document.getElementById('no-users-found-message');
+            resultsContainer.innerHTML = '';
+
+            if (filtered.length > 0) {
+                noResultsMessage.classList.add('hidden');
+                const userCardsGrid = document.createElement('div');
+                userCardsGrid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+                filtered.forEach(user => {
+                    userCardsGrid.appendChild(createUserCardElement(user));
+                });
+                resultsContainer.appendChild(userCardsGrid);
+            } else {
+                noResultsMessage.classList.remove('hidden');
+            }
+        };
+
+        const createUserCardElement = (user) => {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'bg-white p-4 rounded-lg shadow-md border flex flex-col justify-between';
+
+            const isFollowing = currentUser.following.includes(user.id);
+
+            cardDiv.innerHTML = `
+                <div>
+                    <div class="flex items-center mb-3">
+                        <img src="${user.profileImage}" alt="${user.username}" class="w-16 h-16 rounded-full mr-4 object-cover">
+                        <div>
+                            <p class="font-bold text-lg text-gray-800">${user.username}</p>
+                            <p class="text-sm text-gray-600">${user.department}</p>
+                            <p class="text-sm text-gray-500">${user.position}</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-700 mb-3 line-clamp-2" title="${user.personalMission}">ミッション: ${user.personalMission}</p>
+                    <div class="mb-3">
+                        <h5 class="text-sm font-semibold text-gray-700 mb-1">スキル:</h5>
+                        <div class="flex flex-wrap gap-1">
+                            ${user.skills.slice(0, 5).map(skill => `<span class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">${skill}</span>`).join('')}
+                            ${user.skills.length > 5 ? `<span class="text-xs text-gray-500">+${user.skills.length - 5}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t flex justify-end space-x-2">
+                    <button class="${isFollowing ? 'bg-red-200 text-red-800 hover:bg-red-300' : 'bg-blue-500 text-white hover:bg-blue-600'} text-sm px-3 py-1.5 rounded-lg follow-button" data-user-id="${user.id}">
+                        ${isFollowing ? 'フォロー解除' : 'フォロー'}
+                    </button>
+                    <button class="bg-green-500 text-white hover:bg-green-600 text-sm px-3 py-1.5 rounded-lg scout-button" data-user-id="${user.id}">
+                        スカウト
+                    </button>
+                </div>
+            `;
+            return cardDiv;
+        };
+
+        // ★★ ここまでユーザー検索機能 ★★
+
+
+        // ③ 課題ベースの投稿と探索: 課題掲示板のレンダリング
+        // ダミーの課題データ
+        let challengePosts = getFromLocalStorage('miraiCoinChallenges', [
+            { id: 'challenge-1', type: '経営層', title: '全社的なDX推進を加速する新たなアイデア', description: '既存業務のデジタル化だけでなく、新しいビジネスモデル創出に繋がるような画期的なDXアイデアを募集。', tags: ['DX', 'AI', '新規事業'], timestamp: Date.now() - 86400000 * 10, matchedIdeaIds: ['project-1', 'project-5'], comments: [] },
+            { id: 'challenge-2', type: '現場', title: '製造ラインのCO2排出量削減アイデア', description: '生産工程におけるCO2排出量を実質ゼロに近づけるための具体的な技術やプロセスの改善案を求む。', tags: ['GX', '製造', '環境'], timestamp: Date.now() - 86400000 * 5, matchedIdeaIds: ['project-3'], comments: [] },
+            { id: 'challenge-3', type: '経営層', title: '次世代モビリティサービス開発', description: '移動の概念を変えるような、革新的なモビリティサービスの企画。特に、自動運転やMaaSを統合する視点。', tags: ['モビリティ', 'MaaS', '自動運転'], timestamp: Date.now() - 86400000 * 20, matchedIdeaIds: ['project-2', 'project-9'], comments: [] },
+            { id: 'challenge-4', type: '現場', title: '従業員エンゲージメント向上のための施策', description: '社内のコミュニケーションを活性化し、従業員満足度とエンゲージメントを高めるためのユニークな施策案を募集。', tags: ['人事', '組織活性化', '働きがい'], timestamp: Date.now() - 86400000 * 3, matchedIdeaIds: [], comments: [] },
+            { id: 'challenge-5', type: '経営層', title: 'グローバルサプライチェーンのレジリエンス強化', description: '予期せぬリスクに強く、かつ効率的なグローバルサプライチェーンを構築するための戦略。', tags: ['サプライチェーン', 'グローバル', 'リスク管理'], timestamp: Date.now() - 86400000 * 7, matchedIdeaIds: ['project-6'], comments: [] },
+        ]);
+
+        const renderChallengeBoard = () => {
+            const challengeBoardSection = document.getElementById('challenge-board-section');
+            if (!challengeBoardSection) return;
+
+            challengeBoardSection.classList.remove('hidden');
+
+            challengeBoardSection.innerHTML = `
+                <div class="bg-white rounded-xl shadow-lg p-6 mb-6 border border-gray-200">
+                    <div class="mb-6 flex flex-wrap gap-3">
+                        <input type="text" id="challenge-search-input" class="flex-grow p-2 border border-gray-300 rounded-lg" placeholder="課題を検索 (タイトル, タグ)" />
+                        <select id="challenge-type-filter" class="p-2 border border-gray-300 rounded-lg">
+                            <option value="all">すべて</option>
+                            <option value="経営層">経営層</option>
+                            <option value="現場">現場</option>
+                        </select>
+                        <button id="post-challenge-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+                            課題を投稿
+                        </button>
+                    </div>
+
+                    <div id="challenge-posts-list" class="space-y-6">
+                        </div>
+                     <p id="no-challenges-message" class="text-gray-600 text-lg col-span-full text-center py-10 hidden">まだ課題はありません。</p>
+                </div>
+            `;
+
+            document.getElementById('challenge-search-input').addEventListener('input', filterChallengePosts);
+            document.getElementById('challenge-type-filter').addEventListener('change', filterChallengePosts);
+            document.getElementById('post-challenge-button').addEventListener('click', openChallengePostModal);
+
+
+            filterChallengePosts(); // 初期表示
+        };
+
+        const filterChallengePosts = () => {
+            const searchInput = document.getElementById('challenge-search-input').value.toLowerCase();
+            const typeFilter = document.getElementById('challenge-type-filter').value;
+            const challengePostsList = document.getElementById('challenge-posts-list');
+            const noChallengesMessage = document.getElementById('no-challenges-message');
+            challengePostsList.innerHTML = '';
+
+            const filteredChallenges = challengePosts.filter(challenge => {
+                const matchesSearch = challenge.title.toLowerCase().includes(searchInput) ||
+                                      challenge.description.toLowerCase().includes(searchInput) ||
+                                      challenge.tags.some(tag => tag.toLowerCase().includes(searchInput));
+                const matchesType = typeFilter === 'all' || challenge.type === typeFilter;
+                return matchesSearch && matchesType;
+            });
+
+            if (filteredChallenges.length > 0) {
+                noChallengesMessage.classList.add('hidden');
+                filteredChallenges.forEach(challenge => {
+                    challengePostsList.appendChild(createChallengePostElement(challenge));
+                });
+            } else {
+                noChallengesMessage.classList.remove('hidden');
+            }
+        };
+
+        const createChallengePostElement = (challenge) => {
+            const challengeDiv = document.createElement('div');
+            challengeDiv.className = "bg-gray-50 p-5 rounded-lg shadow-sm border border-gray-200";
+            challengeDiv.dataset.challengeId = challenge.id;
+
+            // マッチするアイデアの表示
+            const matchedProjects = projects.filter(p => challenge.matchedIdeaIds.includes(p.id));
+
+            challengeDiv.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <h4 class="text-xl font-bold text-blue-800">${challenge.title}</h4>
+                    <span class="bg-indigo-100 text-indigo-800 text-sm font-medium px-2.5 py-0.5 rounded-full">${challenge.type}</span>
+                </div>
+                <p class="text-gray-700 mb-3">${challenge.description}</p>
+                <div class="mb-3">
+                    ${challenge.tags.map(tag => `<span class="inline-block bg-gray-200 text-gray-800 text-xs font-semibold px-2 py-0.5 rounded-full mr-1">${tag}</span>`).join('')}
+                </div>
+                <p class="text-sm text-gray-500 mb-4">投稿日: ${new Date(challenge.timestamp).toLocaleDateString()}</p>
+
+                ${matchedProjects.length > 0 ? `
+                    <div class="mt-4 pt-3 border-t border-gray-200">
+                        <h5 class="font-bold text-gray-700 mb-2">関連するアイデア・プロジェクト:</h5>
+                        <ul class="list-disc pl-5 space-y-1 text-gray-700 text-sm">
+                            ${matchedProjects.map(p => `<li><a href="#" class="text-blue-600 hover:underline view-project-link" data-project-id="${p.id}">${p.title}</a> (ステージ: ${p.stage})</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : '<p class="text-gray-500 text-sm mt-4 pt-3 border-t border-gray-200">この課題に関連するアイデアはまだありません。</p>'}
+
+                <button class="text-blue-600 hover:underline text-sm mt-4 block view-challenge-details-button" data-action="toggle-challenge-details">
+                    詳細を見る
+                </button>
+
+                <div class="challenge-details mt-4 border-t border-gray-200 pt-4 hidden">
+                    <h5 class="font-bold text-gray-700 mb-3">コメント</h5>
+                    <div id="challenge-comments-container-${challenge.id}" class="space-y-3 mb-4">
+                        ${challenge.comments && challenge.comments.length > 0 ? challenge.comments.map(comment => `
+                            <div class="bg-white p-3 rounded-lg text-sm border">
+                                <div class="flex justify-between items-center mb-1">
+                                    <span class="font-semibold text-gray-800">${comment.anonymous ? '匿名ユーザー' : (getUserById(comment.userId)?.username || '不明')}</span>
+                                    <span class="text-gray-500 text-xs">${new Date(comment.timestamp).toLocaleString()}</span>
+                                </div>
+                                <p class="text-gray-700">${comment.text}</p>
+                            </div>
+                        `).join('') : '<p class="text-gray-500 text-sm">まだコメントはありません。</p>'}
+                    </div>
+                    <div class="flex flex-col space-y-2">
+                        <textarea
+                            class="w-full p-2 border border-gray-300 rounded-lg text-sm challenge-comment-input"
+                            rows="2"
+                            placeholder="コメントを入力..."
+                        ></textarea>
+                        <div class="flex items-center space-x-2">
+                            <label class="flex items-center text-sm text-gray-700 cursor-pointer">
+                                <input type="checkbox" class="mr-1 anonymous-challenge-comment-checkbox">
+                                匿名で投稿
+                            </label>
+                            <button
+                                class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold py-2 px-3 rounded-lg transition duration-300 ease-in-out post-challenge-comment-button"
+                                data-challenge-id="${challenge.id}"
+                            >
+                                コメント投稿
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return challengeDiv;
+        };
+
+        const openChallengePostModal = () => {
+            const modalHtml = `
+                <div id="challenge-post-modal" class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+                    <div class="bg-white p-6 rounded-lg shadow-xl w-11/12 md:w-1/2 lg:w-1/3">
+                        <h3 class="text-xl font-bold mb-4">課題を投稿</h3>
+                        <input type="text" id="challenge-post-title" class="w-full p-2 border border-gray-300 rounded-lg mb-3" placeholder="課題タイトル" />
+                        <textarea id="challenge-post-description" class="w-full p-2 border border-gray-300 rounded-lg mb-3" rows="5" placeholder="課題の詳細"></textarea>
+                        <input type="text" id="challenge-post-tags" class="w-full p-2 border border-gray-300 rounded-lg mb-3" placeholder="タグ (カンマ区切り)" />
+                        <select id="challenge-post-type" class="w-full p-2 border border-gray-300 rounded-lg mb-4">
+                            <option value="現場">現場からの課題</option>
+                            <option value="経営層">経営層からの課題</option>
+                        </select>
+                        <div class="flex justify-end space-x-3">
+                            <button id="cancel-challenge-post" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg">キャンセル</button>
+                            <button id="submit-challenge-post" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">投稿</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            document.getElementById('cancel-challenge-post').addEventListener('click', closeChallengePostModal);
+            document.getElementById('submit-challenge-post').addEventListener('click', submitChallengePost);
+        };
+
+        const closeChallengePostModal = () => {
+            const modal = document.getElementById('challenge-post-modal');
+            if (modal) modal.remove();
+        };
+
+        const submitChallengePost = () => {
+            const titleInput = document.getElementById('challenge-post-title');
+            const descriptionInput = document.getElementById('challenge-post-description');
+            const tagsInput = document.getElementById('challenge-post-tags');
+            const typeInput = document.getElementById('challenge-post-type');
+
+            const title = titleInput.value.trim();
+            const description = descriptionInput.value.trim();
+            const tags = tagsInput.value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+            const type = typeInput.value;
+
+            if (title && description) {
+                const newChallenge = {
+                    id: `challenge-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                    type: type,
+                    title: title,
+                    description: description,
+                    tags: tags,
+                    timestamp: Date.now(),
+                    matchedIdeaIds: [], // マッチングは後でロジックを追加
+                    comments: []
+                };
+                challengePosts.push(newChallenge);
+                saveToLocalStorage('miraiCoinChallenges', challengePosts);
+                showNotification('課題を投稿しました！', 'success');
+                closeChallengePostModal();
+                renderChallengeBoard(); // 課題掲示板を再レンダリング
+            } else {
+                showNotification('タイトルと詳細を入力してください。', 'error');
+            }
+        };
+
+
+        // ⑦ ナレッジのアーカイブと再利用: ナレッジアーカイブのレンダリング
+        const renderKnowledgeArchive = () => {
+            const knowledgeArchiveSection = document.getElementById('knowledge-archive-section');
+            if (!knowledgeArchiveSection) return;
+
+            knowledgeArchiveSection.classList.remove('hidden');
+
+            // 終了したプロジェクトのダミーデータ (実際のデータ構造に合わせて調整)
+            // この変数はグローバルスコープで管理されるべきなので、ここでは定義しない
+            // const closedProjects = getFromLocalStorage('miraiCoinClosedProjects', [ ... ]);
+
+
+            knowledgeArchiveSection.innerHTML = `
+                <div class="bg-white rounded-xl shadow-lg p-6 mb-6 border border-gray-200">
+                    <div class="mb-6 flex flex-wrap items-center gap-3">
+                        <input type="text" id="knowledge-search-input" class="flex-grow p-2 border border-gray-300 rounded-lg" placeholder="ナレッジを検索 (タイトル, 内容, タグ)" />
+                        <select id="knowledge-filter-type" class="p-2 border border-gray-300 rounded-lg">
+                            <option value="all">すべて</option>
+                            <option value="success">成功事例</option>
+                            <option value="failure">失敗事例</option>
+                        </select>
+                        <select id="knowledge-filter-stage" class="p-2 border border-gray-300 rounded-lg">
+                            <option value="all">全ステージ</option>
+                            ${stageOrder.map(stage => `<option value="${stage}">${stage}</option>`).join('')}
+                        </select>
+                    </div>
+
+                    <div id="knowledge-posts-list" class="space-y-6">
+                        </div>
+                     <p id="no-knowledge-message" class="text-gray-600 text-lg col-span-full text-center py-10 hidden">まだナレッジはありません。</p>
+
+                    <h3 class="text-2xl font-bold text-gray-900 mt-10 mb-4">終了プロジェクトアーカイブ</h3>
+                    <div class="mb-6 flex flex-wrap items-center gap-3">
+                         <input type="text" id="closed-project-search-input" class="flex-grow p-2 border border-gray-300 rounded-lg" placeholder="終了プロジェクトを検索 (タイトル, 概要)" />
+                         <select id="closed-project-filter-status" class="p-2 border border-gray-300 rounded-lg">
+                            <option value="all">すべて</option>
+                            <option value="Completed">完了</option>
+                            <option value="Failed">失敗</option>
+                        </select>
+                         <select id="closed-project-filter-member" class="p-2 border border-gray-300 rounded-lg">
+                            <option value="all">全メンバー</option>
+                            ${allUsers.map(user => `<option value="${user.id}">${user.username}</option>`).join('')}
+                        </select>
+                    </div>
+                     <div id="closed-projects-list" class="space-y-6">
+                        </div>
+                    <p id="no-closed-projects-message" class="text-gray-600 text-lg col-span-full text-center py-10 hidden">終了したプロジェクトはありません。</p>
+
+                </div>
+            `;
+
+            document.getElementById('knowledge-search-input').addEventListener('input', filterKnowledgePosts);
+            document.getElementById('knowledge-filter-type').addEventListener('change', filterKnowledgePosts);
+            document.getElementById('knowledge-filter-stage').addEventListener('change', filterKnowledgePosts);
+            document.getElementById('closed-project-search-input').addEventListener('input', filterClosedProjects);
+            document.getElementById('closed-project-filter-status').addEventListener('change', filterClosedProjects);
+            document.getElementById('closed-project-filter-member').addEventListener('change', filterClosedProjects);
+
+            filterKnowledgePosts(); // 初期表示
+            filterClosedProjects(); // 初期表示
+        };
+
+        const filterKnowledgePosts = () => {
+            const searchInput = document.getElementById('knowledge-search-input').value.toLowerCase();
+            const typeFilter = document.getElementById('knowledge-filter-type').value;
+            const stageFilter = document.getElementById('knowledge-filter-stage').value;
+            const knowledgePostsList = document.getElementById('knowledge-posts-list');
+            const noKnowledgeMessage = document.getElementById('no-knowledge-message');
+            knowledgePostsList.innerHTML = '';
+
+            let allKnowledgePosts = [];
+            projects.forEach(project => {
+                if (project.knowledgePosts) {
+                    project.knowledgePosts.forEach(post => {
+                        allKnowledgePosts.push({
+                            ...post,
+                            projectId: project.id,
+                            projectName: project.title,
+                            projectStage: project.stage
+                        });
+                    });
+                }
+            });
+
+
+            const filteredKnowledge = allKnowledgePosts.filter(post => {
+                const matchesSearch = post.title.toLowerCase().includes(searchInput) ||
+                                      post.content.toLowerCase().includes(searchInput) ||
+                                      (post.tags && post.tags.some(tag => tag.toLowerCase().includes(searchInput))); // プロジェクトのタグも検索対象にするか検討
+                const matchesType = typeFilter === 'all' || (typeFilter === 'success' && !post.isFailure) || (typeFilter === 'failure' && post.isFailure);
+                const matchesStage = stageFilter === 'all' || post.projectStage === stageFilter;
+                return matchesSearch && matchesType && matchesStage;
+            });
+
+            if (filteredKnowledge.length > 0) {
+                noKnowledgeMessage.classList.add('hidden');
+                filteredKnowledge.sort((a,b) => b.timestamp - a.timestamp).forEach(post => {
+                    knowledgePostsList.appendChild(createKnowledgePostElement(post));
+                });
+            } else {
+                noKnowledgeMessage.classList.remove('hidden');
+            }
+        };
+
+        const createKnowledgePostElement = (post) => {
+            const postDiv = document.createElement('div');
+            postDiv.className = "bg-gray-50 p-5 rounded-lg shadow-sm border border-gray-200";
+
+            postDiv.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <h4 class="text-lg font-bold text-blue-800">${post.title}</h4>
+                    ${post.isFailure ? '<span class="bg-red-100 text-red-700 text-sm font-medium px-2.5 py-0.5 rounded-full">失敗事例</span>' : '<span class="bg-green-100 text-green-700 text-sm font-medium px-2.5 py-0.5 rounded-full">成功事例</span>'}
+                </div>
+                <p class="text-gray-700 mb-2">${post.content.substring(0, 150)}${post.content.length > 150 ? '...' : ''}</p>
+                <p class="text-sm text-gray-500 mb-2">プロジェクト: <a href="#" class="text-blue-600 hover:underline view-project-link" data-project-id="${post.projectId}">${post.projectName}</a> (ステージ: ${post.projectStage})</p>
+                <p class="text-sm text-gray-500">投稿者: ${getUserById(post.userId)?.username || '不明'} - ${new Date(post.timestamp).toLocaleDateString()}</p>
+                 <div class="flex space-x-2 mt-2 text-sm text-gray-600">
+                    <span><svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21H3v-7a2 2 0 012-2h7.071l-.184-1.222a1.999 1.999 0 011.196-2.617l.794-.486z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2"></path></svg>${post.emotions?.like || 0}</span>
+                    <span><svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>${post.emotions?.thanks || 0}</span>
+                    <span><svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>${post.emotions?.empathy || 0}</span>
+                </div>
+            `;
+            return postDiv;
+        };
+
+        // closedProjects変数をグローバルスコープ（またはより広いスコープ）で一度だけ定義
+        let closedProjects = getFromLocalStorage('miraiCoinClosedProjects', [
+                { id: 'closed-project-1', title: '旧システム移行プロジェクト', status: 'Completed', learnSummary: '要件定義の重要性を再認識。初期段階でのステークホルダーとの密な連携が成功の鍵。', tags: ['システム', '移行', '成功'], members: ['user-1', 'user-2', 'default-user'], stages: ['WILL', 'ENTRY', 'MVP1', 'MVP2', 'SEED', 'ALPHA', 'BETA', 'EXIT'], finalStage: 'EXIT (事業化/会社化)', totalInvested: 50000, completionDate: Date.now() - 86400000 * 90 },
+                { id: 'closed-project-2', title: '新規AIサービス PoC', status: 'Failed', learnSummary: '技術検証に成功したが、市場ニーズとのミスマッチが判明。ターゲット顧客の深掘り不足が課題。', tags: ['AI', 'PoC', '失敗'], members: ['user-3'], stages: ['WILL', 'ENTRY', 'MVP1', 'MVP2'], finalStage: 'MVP2 (解決策検証)', totalInvested: 15000, completionDate: Date.now() - 86400000 * 60 },
+                { id: 'closed-project-3', title: '社内コミュニケーションツール導入', status: 'Completed', learnSummary: 'トップダウンでの導入は抵抗が大きかったが、ユーザー会を通じて改善を重ねることで定着。', tags: ['社内ツール', 'コミュニケーション', '成功'], members: ['user-4', 'default-user'], stages: ['WILL', 'ENTRY', 'MVP1', 'SEED', 'ALPHA', 'EXIT'], finalStage: 'EXIT (事業化/会社化)', totalInvested: 30000, completionDate: Date.now() - 86400000 * 120 },
+            ]);
+
+
+        const filterClosedProjects = () => {
+            const searchInput = document.getElementById('closed-project-search-input').value.toLowerCase();
+            const statusFilter = document.getElementById('closed-project-filter-status').value;
+            const memberFilter = document.getElementById('closed-project-filter-member').value;
+            const closedProjectsList = document.getElementById('closed-projects-list');
+            const noClosedProjectsMessage = document.getElementById('no-closed-projects-message');
+            closedProjectsList.innerHTML = '';
+
+            const filteredClosed = closedProjects.filter(project => {
+                const matchesSearch = project.title.toLowerCase().includes(searchInput) ||
+                                      project.learnSummary.toLowerCase().includes(searchInput) ||
+                                      project.tags.some(tag => tag.toLowerCase().includes(searchInput));
+                const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
+                const matchesMember = memberFilter === 'all' || project.members.includes(memberFilter);
+                return matchesSearch && matchesStatus && matchesMember;
+            });
+
+            if (filteredClosed.length > 0) {
+                noClosedProjectsMessage.classList.add('hidden');
+                filteredClosed.sort((a,b) => b.completionDate - a.completionDate).forEach(project => {
+                    closedProjectsList.appendChild(createClosedProjectElement(project));
+                });
+            } else {
+                noClosedProjectsMessage.classList.remove('hidden');
+            }
+        };
+
+        const createClosedProjectElement = (project) => {
+            const projectDiv = document.createElement('div');
+            projectDiv.className = "bg-green-50 p-5 rounded-lg shadow-sm border border-green-200"; // 終了プロジェクトは緑系に
+            if (project.status === 'Failed') {
+                projectDiv.className = "bg-red-50 p-5 rounded-lg shadow-sm border border-red-200"; // 失敗は赤系に
+            }
+
+            const memberNames = project.members.map(memberId => getUserById(memberId)?.username || '不明').join(', ');
+
+            projectDiv.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <h4 class="text-lg font-bold text-gray-900">${project.title}</h4>
+                    <span class="text-sm font-medium px-2.5 py-0.5 rounded-full ${project.status === 'Completed' ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}">
+                        ${project.status === 'Completed' ? '完了' : '失敗'}
+                    </span>
+                </div>
+                <p class="text-gray-700 mb-2">${project.learnSummary}</p>
+                <div class="mb-2">
+                    ${project.tags.map(tag => `<span class="inline-block bg-gray-200 text-gray-800 text-xs font-semibold px-2 py-0.5 rounded-full mr-1">${tag}</span>`).join('')}
+                </div>
+                <p class="text-sm text-gray-500 mb-2">最終ステージ: ${project.finalStage || '不明'}</p>
+                <p class="text-sm text-gray-500 mb-2">関与メンバー: ${memberNames}</p>
+                <p class="text-sm text-gray-500">完了/失敗日: ${new Date(project.completionDate).toLocaleDateString()}</p>
+                <button class="mt-3 bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold py-1.5 px-3 rounded-lg view-archive-details-button" data-project-id="${project.id}" data-action="view-closed-project-details">
+                    詳細を見る
+                </button>
+                 <button class="mt-3 ml-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-bold py-1.5 px-3 rounded-lg" data-action="output-deliverables">
+                    成果物をイントラ出力
+                </button>
+            `;
+            return projectDiv;
+        };
+
+        // 終了プロジェクト詳細モーダル (擬似)
+        const openClosedProjectDetailsModal = (projectId) => {
+            const project = closedProjects.find(p => p.id === projectId);
+            if (!project) return;
+
+            const memberNames = project.members.map(memberId => getUserById(memberId)?.username || '不明').join(', ');
+
+            const modalHtml = `
+                <div id="closed-project-details-modal" class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+                    <div class="bg-white p-6 rounded-lg shadow-xl w-11/12 md:w-2/3 lg:w-1/2 max-h-[90vh] overflow-y-auto">
+                        <h3 class="text-2xl font-bold mb-4">${project.title}</h3>
+                        <div class="mb-4">
+                            <span class="text-lg font-semibold">ステータス:</span>
+                            <span class="text-lg font-bold ${project.status === 'Completed' ? 'text-green-600' : 'text-red-600'}">${project.status === 'Completed' ? '完了' : '失敗'}</span>
+                        </div>
+                        <p class="text-gray-700 mb-4">${project.learnSummary}</p>
+                        <div class="mb-4">
+                            <span class="font-bold text-gray-700">タグ: </span>
+                            ${project.tags.map(tag => `<span class="inline-block bg-gray-200 text-gray-800 text-xs font-semibold px-2.5 py-0.5 rounded-full mr-2 mb-1">${tag}</span>`).join('')}
+                        </div>
+                        <p class="mb-2"><span class="font-bold text-gray-700">最終ステージ:</span> ${project.finalStage || '不明'}</p>
+                        <p class="mb-2"><span class="font-bold text-gray-700">総投資額:</span> ${project.totalInvested.toFixed(2)} MC</p>
+                        <p class="mb-2"><span class="font-bold text-gray-700">完了/失敗日:</span> ${new Date(project.completionDate).toLocaleDateString()}</p>
+                        <p class="mb-4"><span class="font-bold text-gray-700">関与メンバー:</span> ${memberNames}</p>
+
+                        <h4 class="text-xl font-bold text-gray-800 mb-3">プロジェクトステージ履歴</h4>
+                        <div class="relative pl-4 mb-6">
+                            <div class="absolute h-full border-l-2 border-gray-300 left-0 top-0"></div>
+                            ${project.stages && project.stages.length > 0 ? project.stages.map(stage => `
+                                <div class="mb-2 relative">
+                                    <div class="absolute w-3 h-3 bg-blue-500 rounded-full -left-1.5 top-1"></div>
+                                    <p class="font-semibold text-gray-800">${stage}</p>
+                                </div>
+                            `).join('') : '<p class="text-gray-500 text-sm">ステージ履歴はありません。</p>'}
+                        </div>
+
+                        <div class="flex justify-end space-x-3">
+                            <button id="close-closed-project-details" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg">閉じる</button>
+                             <button class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg" data-action="output-deliverables-modal">
+                                成果物をイントラ出力
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            document.getElementById('close-closed-project-details').addEventListener('click', closeClosedProjectDetailsModal);
+            document.querySelector('#closed-project-details-modal [data-action="output-deliverables-modal"]').addEventListener('click', () => {
+                showNotification(`「${project.title}」の成果物をイントラに出力しました！`, 'success');
+                closeClosedProjectDetailsModal();
+            });
+        };
+
+        const closeClosedProjectDetailsModal = () => {
+            const modal = document.getElementById('closed-project-details-modal');
+            if (modal) modal.remove();
+        };
+
+
+        // 成果物イントラ出力（擬似）
+        const outputDeliverables = (projectId) => {
+            const project = closedProjects.find(p => p.id === projectId);
+            if (project) {
+                showNotification(`「${project.title}」の成果物をイントラに出力しました！`, 'success');
+            }
+        };
+
+        // ⑧ 業務・制度・外部との接続: 通知機能
+        const initializeNotifications = () => {
+            notifications = getFromLocalStorage('miraiCoinNotifications', []);
+            // ダミー通知の追加 (初期ロード時のみ、currentUserのIDに紐付ける)
+            if (notifications.filter(n => n.userId === currentUser.id).length === 0) { // ログインユーザーに通知がない場合のみ追加
+                notifications.push({
+                    id: 'notif-1', type: 'system', message: 'MIRAI Coinへようこそ！あなたの残高は10000MCです。', read: false, timestamp: Date.now() - 3600000, userId: currentUser.id
+                });
+                 notifications.push({
+                    id: 'notif-2', type: 'investment', message: 'プロジェクト「EVバッテリー長寿命化技術」に500MCが投資されました。', projectId: 'project-3', read: false, timestamp: Date.now() - 7200000, userId: currentUser.id // ログインユーザー宛て
+                });
+                // 他のユーザーからの通知をシミュレートする場合は、userIdをそのユーザーのIDにする
+                const dummyUser1 = allUsers.find(u => u.id === 'user-1'); // ダミーユーザーのIDを検索
+                if (dummyUser1) {
+                    notifications.push({
+                        id: 'notif-3', type: 'follow', message: `${dummyUser1.username}さんがあなたをフォローしました。`, fromUserId: dummyUser1.id, read: false, timestamp: Date.now() - 10800000, userId: currentUser.id // ログインユーザー宛て
+                    });
+                }
+                saveToLocalStorage('miraiCoinNotifications', notifications);
+            }
+        };
+
+        const addNotification = (newNotificationData, targetUserId) => {
+            const notificationToAdd = { ...newNotificationData, userId: targetUserId, read: false };
+
+            // ログイン中のユーザーへの通知であれば、リアルタイム性を高める
+            if (currentUser && targetUserId === currentUser.id) {
+                notifications.unshift(notificationToAdd);
+                updateNotificationBadge();
+                const dropdown = document.getElementById('notification-dropdown');
+                if (dropdown && !dropdown.classList.contains('hidden')) {
+                    renderNotificationDropdown();
+                }
+            } else {
+                 // ログイン外ユーザーへの通知も配列には追加
+                notifications.unshift(notificationToAdd);
+            }
+            saveToLocalStorage('miraiCoinNotifications', notifications);
+        };
+
+
+        const updateNotificationBadge = () => {
+            if (!currentUser) return;
+            const unreadCount = notifications.filter(n => n.userId === currentUser.id && !n.read).length;
+
+            const headerBadge = document.getElementById('header-unread-notifications-badge');
+            const footerBadge = document.getElementById('unread-notifications-badge'); // フッターのバッジ
+
+            const updateBadge = (badgeElement) => {
+                 if (badgeElement) {
+                    if (unreadCount > 0) {
+                        badgeElement.textContent = unreadCount;
+                        badgeElement.classList.remove('hidden');
+                    } else {
+                        badgeElement.classList.add('hidden');
+                    }
+                }
+            };
+            updateBadge(headerBadge);
+            updateBadge(footerBadge);
+        };
+
+        const toggleNotificationDropdown = () => {
+            const dropdown = document.getElementById('notification-dropdown');
+            dropdown.classList.toggle('hidden');
+            if (!dropdown.classList.contains('hidden')) {
+                renderNotificationDropdown();
+            }
+        };
+
+        const renderNotificationDropdown = () => {
+            const notificationList = document.getElementById('notification-list');
+            notificationList.innerHTML = '';
+            const recentNotifications = notifications.filter(n => n.userId === currentUser.id).slice(0, 5); // 最新5件を表示
+
+            if (recentNotifications.length > 0) {
+                recentNotifications.forEach(notif => {
+                    const notificationItem = document.createElement('div');
+                    notificationItem.className = `px-4 py-2 border-b last:border-b-0 cursor-pointer ${notif.read ? 'bg-white text-gray-600' : 'bg-blue-50 text-blue-800 font-semibold'}`;
+                    notificationItem.innerHTML = `
+                        <p class="text-sm">${notif.message}</p>
+                        <p class="text-xs text-gray-500 mt-1">${new Date(notif.timestamp).toLocaleString()}</p>
+                    `;
+                    notificationItem.addEventListener('click', () => markNotificationAsRead(notif.id));
+                    notificationList.appendChild(notificationItem);
+                });
+            } else {
+                notificationList.innerHTML = `<p class="px-4 py-2 text-sm text-gray-500">新しい通知はありません。</p>`;
+            }
+            updateNotificationBadge();
+        };
+
+        const markNotificationAsRead = (id) => {
+            notifications = notifications.map(n => n.id === id ? { ...n, read: true } : n);
+            saveToLocalStorage('miraiCoinNotifications', notifications);
+            renderNotificationDropdown(); // ドロップダウンを更新
+            updateNotificationBadge();
+             if (!document.getElementById('notifications-section').classList.contains('hidden')) {
+                renderNotifications();
+            }
+        };
+
+        const markAllNotificationsAsRead = () => {
+            notifications = notifications.map(n => n.userId === currentUser.id ? { ...n, read: true } : n);
+            saveToLocalStorage('miraiCoinNotifications', notifications);
+            showNotification('すべての通知を既読にしました。', 'success');
+            renderNotificationDropdown();
+            updateNotificationBadge();
+             if (!document.getElementById('notifications-section').classList.contains('hidden')) {
+                renderNotifications();
+            }
+        };
+
+        const renderNotifications = () => {
+            const notificationsSection = document.getElementById('notifications-section');
+            if (!notificationsSection) return;
+
+            notificationsSection.classList.remove('hidden');
+
+            const userNotifications = notifications.filter(n => n.userId === currentUser.id).sort((a,b) => b.timestamp - a.timestamp);
+
+            notificationsSection.innerHTML = `
+                <div class="bg-white rounded-xl shadow-lg p-6 mb-6 border border-gray-200">
+                    <button id="mark-all-read-full-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg mb-4">
+                        すべて既読にする
+                    </button>
+                    <div id="full-notification-list" class="space-y-3">
+                        ${userNotifications.length > 0 ? userNotifications.map(notif => `
+                            <div class="p-3 rounded-lg flex items-center justify-between ${notif.read ? 'bg-gray-100 text-gray-700' : 'bg-blue-50 text-blue-800 font-semibold'}">
+                                <div>
+                                    <p class="text-sm">${notif.message}</p>
+                                    <p class="text-xs text-gray-500 mt-1">${new Date(notif.timestamp).toLocaleString()}</p>
+                                </div>
+                                ${!notif.read ? `<button class="bg-blue-200 text-blue-800 text-xs px-2 py-1 rounded-full mark-as-read-item-button" data-notification-id="${notif.id}">既読にする</button>` : ''}
+                            </div>
+                        `).join('') : '<p class="text-gray-500 text-lg text-center py-10">通知はありません。</p>'}
+                    </div>
+                </div>
+            `;
+            document.getElementById('mark-all-read-full-button').addEventListener('click', markAllNotificationsAsRead);
+            document.querySelectorAll('.mark-as-read-item-button').forEach(button => {
+                button.addEventListener('click', (e) => markNotificationAsRead(e.target.dataset.notificationId));
+            });
+        };
+
+        // ⑧ 週次ハイライト自動生成
+        const generateWeeklyHighlight = () => {
+            const highlight = {
+                date: new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' }),
+                newProjects: [],
+                activeProjects: [],
+                featuredProjects: [],
+                newMembers: [],
+                topInvestors: [],
+                failureLearn: []
+            };
+
+            // 新着プロジェクト (過去7日以内)
+            highlight.newProjects = projects.filter(p => (Date.now() - p.timestamp) < (7 * 24 * 60 * 60 * 1000)).slice(0, 3);
+
+            // 活発なプロジェクト (コメント数、投資額などが多い)
+            highlight.activeProjects = [...projects].sort((a, b) => {
+                const aActivity = (a.comments.length * 5) + (a.investors.length * 10) + a.investedCoins;
+                const bActivity = (b.comments.length * 5) + (b.investors.length * 10) + b.investedCoins;
+                return bActivity - aActivity;
+            }).slice(0, 3);
+
+            // 注目プロジェクト (お気に入り数が多い、またはランダム)
+            highlight.featuredProjects = [...projects].sort((a, b) => b.favoriteCount - a.favoriteCount).slice(0, 3);
+
+            // 新規参画メンバー (過去7日以内に追加されたメンバー、ダミーデータなのでここは難しいためランダムに選出)
+            highlight.newMembers = allUsers.filter(u => u.id !== currentUser.id && u.id.startsWith('user-')).sort(() => 0.5 - Math.random()).slice(0, 3);
+
+            // 上位投資家 (過去7日以内の投資額)
+            const recentInvestments = {};
+            projects.forEach(p => {
+                p.investors.forEach(inv => {
+                    if ((Date.now() - inv.timestamp) < (7 * 24 * 60 * 60 * 1000)) {
+                        recentInvestments[inv.userId] = (recentInvestments[inv.userId] || 0) + inv.amount;
+                    }
+                });
+            });
+            highlight.topInvestors = Object.entries(recentInvestments)
+                .map(([userId, amount]) => ({ user: getUserById(userId), amount }))
+                .filter(item => item.user !== undefined && item.user.id !== currentUser.id)
+                .sort((a, b) => b.amount - a.amount)
+                .slice(0, 3);
+
+            // 失敗事例からの学び (ナレッジアーカイブから失敗事例を抽出)
+            highlight.failureLearn = [];
+            projects.forEach(p => {
+                if (p.knowledgePosts) {
+                    p.knowledgePosts.filter(kp => kp.isFailure).forEach(kp => {
+                        highlight.failureLearn.push({
+                            title: kp.title,
+                            summary: kp.content.substring(0, 50) + '...',
+                            projectId: p.id,
+                            projectName: p.title
+                        });
+                    });
+                }
+            });
+            // 終了プロジェクトの失敗事例からも追加
+            closedProjects.filter(cp => cp.status === 'Failed').forEach(cp => {
+                highlight.failureLearn.push({
+                    title: cp.title,
+                    summary: cp.learnSummary.substring(0, 50) + '...',
+                    projectId: cp.id, // closed project id
+                    projectName: cp.title
+                });
+            });
+            highlight.failureLearn = highlight.failureLearn.slice(0, 2); // 最新の2件
+
+            return highlight;
+        };
+
+        const renderWeeklyHighlight = () => {
+            const weeklyHighlightSection = document.getElementById('weekly-highlight-section');
+            if (!weeklyHighlightSection) return;
+
+            weeklyHighlightSection.classList.remove('hidden');
+
+            const highlight = generateWeeklyHighlight();
+
+            weeklyHighlightSection.innerHTML = `
+                <div class="bg-white rounded-xl shadow-lg p-6 mb-6 border border-gray-200">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">週次ハイライト (${highlight.date} 週)</h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="text-xl font-bold text-blue-700 mb-3">🚀 新着プロジェクト</h4>
+                            ${highlight.newProjects.length > 0 ? `
+                                <ul class="list-disc pl-5 space-y-1 text-gray-700">
+                                    ${highlight.newProjects.map(p => `<li><a href="#" class="text-blue-600 hover:underline view-project-link" data-project-id="${p.id}">${p.title}</a></li>`).join('')}
+                                </ul>
+                            ` : '<p class="text-gray-500 text-sm">今週の新着プロジェクトはありません。</p>'}
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold text-green-700 mb-3">🔥 活発なプロジェクト</h4>
+                            ${highlight.activeProjects.length > 0 ? `
+                                <ul class="list-disc pl-5 space-y-1 text-gray-700">
+                                    ${highlight.activeProjects.map(p => `<li><a href="#" class="text-blue-600 hover:underline view-project-link" data-project-id="${p.id}">${p.title}</a> (投資人数: ${new Set(p.investors.map(inv => inv.userId)).size}人)</li>`).join('')}
+                                </ul>
+                            ` : '<p class="text-gray-500 text-sm">今週特に活発なプロジェクトはありません。</p>'}
+                        </div>
+                         <div>
+                            <h4 class="text-xl font-bold text-yellow-700 mb-3">🌟 注目プロジェクト</h4>
+                            ${highlight.featuredProjects.length > 0 ? `
+                                <ul class="list-disc pl-5 space-y-1 text-gray-700">
+                                    ${highlight.featuredProjects.map(p => `<li><a href="#" class="text-blue-600 hover:underline view-project-link" data-project-id="${p.id}">${p.title}</a> (お気に入り: ${p.favoriteCount})</li>`).join('')}
+                                </ul>
+                            ` : '<p class="text-gray-500 text-sm">今週の注目プロジェクトはありません。</p>'}
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold text-purple-700 mb-3">🆕 新規参画メンバー</h4>
+                            ${highlight.newMembers.length > 0 ? `
+                                <ul class="list-disc pl-5 space-y-1 text-gray-700">
+                                    ${highlight.newMembers.map(u => `<li>${u.username} (${u.department})</li>`).join('')}
+                                </ul>
+                            ` : '<p class="text-gray-500 text-sm">今週の新規参画メンバーはいません。</p>'}
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold text-orange-700 mb-3">💰 上位投資家</h4>
+                            ${highlight.topInvestors.length > 0 ? `
+                                <ul class="list-disc pl-5 space-y-1 text-gray-700">
+                                    ${highlight.topInvestors.map(inv => `<li>${inv.user.username}: ${inv.amount.toFixed(2)} MC</li>`).join('')}
+                                </ul>
+                            ` : '<p class="text-gray-500 text-sm">今週の主要な投資家はいません。</p>'}
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold text-red-700 mb-3">💡 失敗事例からの学び</h4>
+                            ${highlight.failureLearn.length > 0 ? `
+                                <ul class="list-disc pl-5 space-y-1 text-gray-700">
+                                    ${highlight.failureLearn.map(f => `<li><a href="#" class="text-blue-600 hover:underline" onclick="showSection('knowledge-archive'); setTimeout(() => { const kp = document.querySelector('#knowledge-posts-list .bg-gray-50 > h4[title*=\\'${f.title.replace(/'/g, "\\'")}\\']'); if(kp) kp.closest('.bg-gray-50').scrollIntoView({behavior: 'smooth', block: 'center'}); }, 100);">「${f.title}」</a>: ${f.summary}</li>`).join('')}
+                                </ul>
+                            ` : '<p class="text-gray-500 text-sm">今週の失敗事例からの学びはありません。</p>'}
+                        </div>
+                    </div>
+                </div>
+            `;
+            // ここで highlight.newProjects などのリンクにイベントリスナーを追加することも可能
+            weeklyHighlightSection.querySelectorAll('.view-project-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const projectId = e.target.dataset.projectId;
+                    showSection('project-list');
+                    setTimeout(() => {
+                        const projectElement = document.querySelector(`[data-project-id="${projectId}"]`);
+                        if (projectElement) {
+                            projectElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            projectElement.classList.add('ring-4', 'ring-blue-500', 'ring-opacity-75');
+                            setTimeout(() => {
+                                projectElement.classList.remove('ring-4', 'ring-blue-500', 'ring-opacity-75');
+                            }, 3000);
+                        }
+                    }, 100);
+                });
+            });
+        };
+
+        // ⑤ 心理的安全性と実験文化の醸成: チャレンジモード/実験プロジェクト表示
+        // ダミーの実験プロジェクトデータ
+        let experimentalProjects = getFromLocalStorage('miraiCoinExperimentalProjects', [
+            {
+                id: 'exp-project-1',
+                title: 'AIを活用した社内報パーソナライズ化実験',
+                description: '従業員の興味関心に基づき、AIが最適な社内ニュースを推薦するシステムを開発。小さなチームでプロトタイプを検証します。',
+                status: '実験中',
+                tags: ['AI', '社内コミュニケーション', '効率化'],
+                proposer: 'user-1',
+                currentStage: 'MVP1 (顧客課題特定)',
+                progress: 60,
+                learnings: [
+                    { id: 'exp-learn-1-1', title: '初期のユーザーヒアリングでの課題発見', content: 'ユーザーは「情報過多」に疲弊していることが判明。パーソナライズだけでなく、情報の「絞り込み」が重要。', isFailure: true, timestamp: Date.now() - 86400000 * 5, userId: 'user-1' },
+                    { id: 'exp-learn-1-2', title: 'AIモデルの初期精度向上', content: '自然言語処理モデルのチューニングにより、推薦精度が20%向上。', isFailure: false, timestamp: Date.now() - 86400000 * 2, userId: 'default-user' }
+                ],
+                emotions: { cheer: 15, thanks: 5, empathy: 10 }
+            },
+            {
+                id: 'exp-project-2',
+                title: 'バーチャルオフィス環境での集中力向上実験',
+                description: 'VR/AR技術を活用し、集中力を高めるためのバーチャルワークスペースを構築。新しい働き方を模索します。',
+                status: '企画中',
+                tags: ['VR/AR', '働き方改革', '集中力'],
+                proposer: 'default-user',
+                currentStage: 'WILL (ビジョン策定/アイデア発掘)',
+                progress: 20,
+                learnings: [],
+                emotions: { cheer: 8, thanks: 2, empathy: 3 }
+            }
+        ]);
+
+
+        const renderChallengeMode = () => {
+            const challengeBoardSection = document.getElementById('challenge-board-section'); // 課題ボードと同じセクションを利用
+            if (!challengeBoardSection) return;
+
+            challengeBoardSection.classList.remove('hidden');
+
+
+            challengeBoardSection.innerHTML = `
+                <div class="bg-white rounded-xl shadow-lg p-6 mb-6 border border-gray-200">
+                    <p class="text-gray-700 mb-6">
+                        ここでは、まだ不確実性の高い「実験的」なプロジェクトや、失敗を恐れずに挑戦する「チャレンジ」の場が表示されます。
+                        小さな成功や失敗から学び、次のイノベーションへと繋げましょう。
+                    </p>
+
+                    <div id="experimental-projects-list" class="space-y-6">
+                        </div>
+                    <p id="no-experimental-projects-message" class="text-gray-600 text-lg col-span-full text-center py-10 hidden">現在、実験プロジェクトはありません。</p>
+
+                     <h3 class="text-2xl font-bold text-gray-900 mt-10 mb-4">失敗事例の賞賛・共有</h3>
+                    <p class="text-gray-700 mb-6">
+                        過去の失敗から得られた貴重な学びを共有し、組織全体の知見として活用しましょう。
+                        失敗を恐れず、そこから学びを得る文化を醸成します。
+                    </p>
+                    <button class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out" data-action="view-failure-archive">
+                        すべての失敗事例を見る (ナレッジアーカイブへ)
+                    </button>
+                </div>
+            `;
+
+            const experimentalProjectsList = document.getElementById('experimental-projects-list');
+            const noExperimentalProjectsMessage = document.getElementById('no-experimental-projects-message');
+            experimentalProjectsList.innerHTML = '';
+
+            if (experimentalProjects.length > 0) {
+                noExperimentalProjectsMessage.classList.add('hidden');
+                experimentalProjects.forEach(expProject => {
+                    experimentalProjectsList.appendChild(createExperimentalProjectElement(expProject));
+                });
+            } else {
+                noExperimentalProjectsMessage.classList.remove('hidden');
+            }
+
+            // イベントリスナーはinitEventListenersで登録済み
+        };
+
+        const createExperimentalProjectElement = (expProject) => {
+            const expDiv = document.createElement('div');
+            expDiv.className = "bg-yellow-50 p-5 rounded-lg shadow-sm border border-yellow-200"; // 実験プロジェクトは黄色系
+            expDiv.innerHTML = `
+                <h4 class="text-xl font-bold text-orange-800 mb-2">${expProject.title}</h4>
+                <p class="text-gray-700 mb-3">${expProject.description}</p>
+                <div class="mb-3">
+                    ${expProject.tags.map(tag => `<span class="inline-block bg-gray-200 text-gray-800 text-xs font-semibold px-2 py-0.5 rounded-full mr-1">${tag}</span>`).join('')}
+                </div>
+                <p class="text-sm text-gray-600 mb-2">現在のステージ: <span class="font-semibold">${expProject.currentStage}</span></p>
+                <p class="text-sm text-gray-600 mb-4">提案者: ${getUserById(expProject.proposer)?.username || '不明'}</p>
+
+                <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+                    <div class="bg-blue-600 h-2.5 rounded-full" style="width: ${expProject.progress}%"></div>
+                </div>
+                <p class="text-sm text-gray-600 mb-4">進捗: ${expProject.progress}%</p>
+
+                <h5 class="font-bold text-gray-700 mb-2">学び・知見 (最近):</h5>
+                <div class="space-y-2 mb-4">
+                    ${expProject.learnings.length > 0 ? expProject.learnings.map(learn => `
+                        <div class="bg-white p-2 rounded-lg text-xs border ${learn.isFailure ? 'border-red-300' : 'border-green-300'}">
+                            <span class="font-semibold">${learn.title}</span> (${learn.isFailure ? '失敗' : '成功'}) - ${new Date(learn.timestamp).toLocaleDateString()}
+                        </div>
+                    `).join('') : '<p class="text-gray-500 text-xs">まだ学びは記録されていません。</p>'}
+                </div>
+
+                <div class="flex space-x-3 mt-4">
+                    <button class="flex items-center text-sm text-gray-600 hover:text-green-600 emotion-exp-button" data-exp-id="${expProject.id}" data-emotion-type="cheer">
+                        <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>
+                        <span class="emotion-count">${expProject.emotions?.cheer || 0}</span> 応援
+                    </button>
+                    <button class="flex items-center text-sm text-gray-600 hover:text-blue-600 emotion-exp-button" data-exp-id="${expProject.id}" data-emotion-type="empathy">
+                        <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM7 13a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path></svg>
+                        <span class="emotion-count">${expProject.emotions?.empathy || 0}</span> 共感
+                    </button>
+                    <button class="flex items-center text-sm text-gray-600 hover:text-purple-600 emotion-exp-button" data-exp-id="${expProject.id}" data-emotion-type="thanks">
+                        <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path><path fill-rule="evenodd" d="M4 5a2 2 0 012-2h2V1a1 1 0 011-1h2a1 1 0 011 1v2h2a2 2 0 012 2v10a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 2a1 1 0 000 2h.01a1 1 0 000-2H7zm3 0a1 1 0 000 2h.01a1 1 0 000-2H10zm3 0a1 1 0 000 2h.01a1 1 0 000-2H13zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H10zm-3 0a1 1 0 100 2h.01a1 1 0 100-2H7zm3 4a1 1 0 100 2h.01a1 1 0 100-2H10zm-3 0a1 1 0 100 2h.01a1 1 0 100-2H7z" clip-rule="evenodd"></path></svg>
+                        <span class="emotion-count">${expProject.emotions?.thanks || 0}</span> ありがとう
+                    </button>
+                </div>
+            `;
+            return expDiv;
+        };
+
+        // 管理設定セクション (ダミー)
+        const renderAdminSettings = () => {
+            const adminSettingsSection = document.getElementById('admin-settings-section');
+            if (!adminSettingsSection) return;
+            adminSettingsSection.classList.remove('hidden');
+            adminSettingsSection.innerHTML = `
+                <div class="bg-white rounded-xl shadow-lg p-6 mb-6 border border-gray-200">
+                     <p class="text-gray-700 mb-4">
+                        ここでは、システム管理者がMIRAI Coin制度や関連する業務プロセスと連携するための設定を行うことができます。
+                        (このセクションは現在開発中のため、ダミーの内容が表示されています。)
+                    </p>
+                    <div class="space-y-4">
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800">1. MIRAI Coin残高の一括調整</h4>
+                            <p class="text-gray-600 text-sm">全ユーザーのMIRAI Coin残高を調整します。</p>
+                            <button class="mt-2 bg-blue-500 hover:bg-blue-600 text-white text-sm py-1.5 px-3 rounded-lg" onclick="showNotification('MIRAI Coin残高の一括調整をシミュレートしました。', 'info');">調整を実行</button>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800">2. 評価制度との連携設定</h4>
+                            <p class="text-gray-600 text-sm">MIRAI Coinの貢献スコアを人事評価制度に連携するための設定を行います。</p>
+                            <button class="mt-2 bg-blue-500 hover:bg-blue-600 text-white text-sm py-1.5 px-3 rounded-lg" onclick="showNotification('評価制度連携設定をシミュレートしました。', 'info');">設定を開く</button>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800">3. 目標設定システムとの連携</h4>
+                            <p class="text-gray-600 text-sm">OKRやMBOなどの目標設定システムとプロジェクトを連携します。</p>
+                            <button class="mt-2 bg-blue-500 hover:bg-blue-600 text-white text-sm py-1.5 px-3 rounded-lg" onclick="showNotification('目標設定システム連携をシミュレートしました。', 'info');">連携設定</button>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold text-gray-800">4. 外部API連携管理</h4>
+                            <p class="text-gray-600 text-sm">Slack, Teams, Confluenceなど外部サービスとのAPI連携を管理します。</p>
+                            <button class="mt-2 bg-blue-500 hover:bg-blue-600 text-white text-sm py-1.5 px-3 rounded-lg" onclick="showNotification('外部API連携管理をシミュレートしました。', 'info');">管理画面へ</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+
+
+        // Initial setup and rendering on page load
+        window.onload = () => {
+            initializeAuth();
+            initializeProjects();
+            if (getFromLocalStorage('miraiCoinExperimentalProjects', []).length === 0) {
+                 saveToLocalStorage('miraiCoinExperimentalProjects', experimentalProjects);
+            }
+            initializeNotifications();
+            initEventListeners();
+            renderDashboard();
+            updateNotificationBadge();
+        };
+    </script>
+</body>
+</html>
